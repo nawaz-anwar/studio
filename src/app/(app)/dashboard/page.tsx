@@ -1,35 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartConfig,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
-
-const chartData = [
-  { month: "January", revenue: 18600, expenses: 8000 },
-  { month: "February", revenue: 30500, expenses: 12000 },
-  { month: "March", revenue: 23700, expenses: 9500 },
-  { month: "April", revenue: 7300, expenses: 4500 },
-  { month: "May", revenue: 20900, expenses: 11000 },
-  { month: "June", revenue: 21400, expenses: 13000 },
-];
-
-const chartConfig = {
-  revenue: {
-    label: "Revenue",
-    color: "hsl(var(--chart-1))",
-  },
-  expenses: {
-    label: "Expenses",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig
+import DashboardClient from "./_components/dashboard-client";
 
 export default function DashboardPage() {
   const totalRevenue = 54231.89;
@@ -71,50 +43,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-            <CardHeader>
-                <CardTitle>Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-                    <BarChart accessibilityLayer data={chartData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis
-                            dataKey="month"
-                            tickLine={false}
-                            tickMargin={10}
-                            axisLine={false}
-                            tickFormatter={(value) => value.slice(0, 3)}
-                        />
-                        <YAxis
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value) => `$${Number(value) / 1000}k`}
-                         />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <ChartLegend content={<ChartLegendContent />} />
-                        <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-                        <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
-                    </BarChart>
-                </ChartContainer>
-            </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Appointments</CardTitle>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={new Date()}
-              className="rounded-md"
-              disabled
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardClient />
     </div>
   );
 }
