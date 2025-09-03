@@ -18,10 +18,10 @@ export default function NavLink({ href, children, isMobile }: { href: string; ch
   }
 
   return (
-    <Link href={href} legacyBehavior passHref>
-      <SidebarMenuButton isActive={isActive}>
+    <SidebarMenuButton asChild isActive={isActive}>
+      <Link href={href}>
         {children}
-      </SidebarMenuButton>
-    </Link>
+      </Link>
+    </SidebarMenuButton>
   );
 }
