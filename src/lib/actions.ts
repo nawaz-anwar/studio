@@ -3,7 +3,7 @@
 
 import { extractEmployeeInfo as extractEmployeeInfoFlow } from '@/ai/flows/extract-employee-info-flow';
 import type { ExtractEmployeeInfoInput } from '@/lib/schema/employee';
-import { app, auth, db } from '@/lib/firebase';
+import { app, auth as clientAuth, db } from '@/lib/firebase'; // Renamed auth to clientAuth to avoid conflict
 import { getAuth as getAdminAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc } from 'firebase/firestore';
 
@@ -19,16 +19,19 @@ export async function extractEmployeeInfo(input: ExtractEmployeeInfoInput) {
     }
 }
 
-// Separate auth instance for admin actions to avoid conflicts
+// Separate auth instance for admin actions to avoid conflicts.
+// This is necessary because the client-side auth object (used for the logged-in user)
+// should not be used for admin-level user creation.
 const adminAuth = getAdminAuth(app);
 
 export async function createAdminUser(email: string, password: string): Promise<{ success: boolean, error?: string }> {
   try {
-    // Note: This creates the user in Firebase Auth, but does not sign them in.
+    // This creates the user in Firebase Authentication.
     const userCredential = await createUserWithEmailAndPassword(adminAuth, email, password);
     
-    // Add admin record to Firestore
+    // Add an admin record to the 'admins' collection in Firestore.
     await addDoc(collection(db, 'admins'), {
+      uid: userCredential.user.uid,
       email: userCredential.user.email,
       createdAt: serverTimestamp(),
     });
@@ -36,7 +39,16 @@ export async function createAdminUser(email: string, password: string): Promise<
     return { success: true };
   } catch (error: any) {
     console.error("Error creating admin user:", error);
-    return { success: false, error: error.message };
+    // Provide a more user-friendly error message
+    let errorMessage = "An error occurred while creating the admin user.";
+    if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "This email address is already in use by another account.";
+    } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "The email address is not valid.";
+    } else if (error.code === 'auth/weak-password') {
+        errorMessage = "The password is too weak. Please use a stronger password.";
+    }
+    return { success: false, error: errorMessage };
   }
 }
 
