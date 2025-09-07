@@ -4,7 +4,7 @@ import * as React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PlusCircle, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Bot, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -53,70 +53,109 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { extractEmployeeInfo } from '@/lib/actions';
+import { Textarea } from '@/components/ui/textarea';
 
 const employeeSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   designation: z.string().min(2, 'Designation is required.'),
   salary: z.coerce.number().positive('Salary must be a positive number.'),
-  city: z.string().min(2, 'City is required.'),
+  city: z.string().optional(),
   country: z.string().min(2, 'Country is required.'),
   mobile: z.string().optional(),
+});
+
+const extractionSchema = z.object({
+  photo: z.custom<FileList>().refine(files => files?.length > 0, 'An image is required.'),
+  context: z.string().optional(),
 });
 
 export default function EmployeeManagement() {
   const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isExtracting, setIsExtracting] = React.useState(false);
   const { toast } = useToast();
   
-  React.useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "employees"));
-        const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
-        setEmployees(employeesData);
-      } catch (error) {
-        console.error("Error fetching employees: ", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not fetch employees from the database.",
-        });
-      }
-    };
-
-    fetchEmployees();
-  }, [toast]);
-  
-  const form = useForm<z.infer<typeof employeeSchema>>({
-    resolver: zodResolver(employeeSchema),
-    defaultValues: {
-      name: '',
-      designation: '',
-      salary: 0,
-      city: '',
-      country: '',
-      mobile: '',
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof employeeSchema>) {
+  const fetchEmployees = React.useCallback(async () => {
     try {
-      const docRef = await addDoc(collection(db, "employees"), values);
-      const newEmployee: Employee = { id: docRef.id, ...values };
-      setEmployees([...employees, newEmployee]);
-      toast({
-        title: 'Success!',
-        description: 'New employee has been added.',
-      });
-      form.reset();
-      setIsDialogOpen(false);
+      const querySnapshot = await getDocs(collection(db, "employees"));
+      const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+      setEmployees(employeesData);
     } catch (error) {
-      console.error("Error adding employee: ", error);
+      console.error("Error fetching employees: ", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not save the employee to the database.",
+        description: "Could not fetch employees from the database.",
       });
+    }
+  }, [toast]);
+
+  React.useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
+  
+  const form = useForm<z.infer<typeof extractionSchema>>({
+    resolver: zodResolver(extractionSchema),
+  });
+
+  const fileRef = form.register("photo");
+
+  async function handleExtraction(values: z.infer<typeof extractionSchema>) {
+    setIsExtracting(true);
+    try {
+      const file = values.photo[0];
+      const reader = new FileReader();
+
+      reader.onloadend = async () => {
+        const photoDataUri = reader.result as string;
+
+        const result = await extractEmployeeInfo({
+          photoDataUri,
+          context: values.context || "",
+        });
+
+        if (result.success && result.data) {
+          const { name, designation, salary, nationality } = result.data;
+          
+          const newEmployeeData = {
+              name,
+              designation,
+              salary,
+              country: nationality,
+              city: "", // City is optional
+              mobile: "", // Mobile is optional
+          };
+
+          // Validate with Zod before saving
+          const validatedData = employeeSchema.parse(newEmployeeData);
+
+          const docRef = await addDoc(collection(db, "employees"), validatedData);
+          const newEmployee: Employee = { id: docRef.id, ...validatedData };
+          setEmployees(prev => [...prev, newEmployee]);
+
+          toast({
+            title: 'Success!',
+            description: 'New employee extracted and added.',
+          });
+          form.reset();
+          setIsDialogOpen(false);
+        } else {
+            throw new Error(result.error || "Failed to extract employee information.");
+        }
+      };
+
+      reader.readAsDataURL(file);
+
+    } catch (error: any) {
+      console.error("Error during extraction or saving: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "An unexpected error occurred.",
+      });
+    } finally {
+        setIsExtracting(false);
     }
   }
 
@@ -148,47 +187,21 @@ export default function EmployeeManagement() {
                     </DialogTrigger>
                     <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Add New Employee</DialogTitle>
+                        <DialogTitle>Add Employee with AI</DialogTitle>
                         <DialogDescription>
-                        Fill in the details below to add a new team member.
+                            Upload an image (like an ID or resume) and provide context to automatically extract employee details.
                         </DialogDescription>
                     </DialogHeader>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <form onSubmit={form.handleSubmit(handleExtraction)} className="space-y-4">
                         <FormField
                             control={form.control}
-                            name="name"
+                            name="photo"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Name</FormLabel>
+                                <FormLabel>Employee Document</FormLabel>
                                 <FormControl>
-                                <Input placeholder="John Doe" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="designation"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Designation</FormLabel>
-                                <FormControl>
-                                <Input placeholder="Project Manager" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="mobile"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Mobile Number (Optional)</FormLabel>
-                                <FormControl>
-                                <Input placeholder="0501234567" {...field} />
+                                    <Input type="file" accept="image/*" {...fileRef} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -196,50 +209,34 @@ export default function EmployeeManagement() {
                         />
                         <FormField
                             control={form.control}
-                            name="salary"
+                            name="context"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Salary (Monthly, AED)</FormLabel>
+                                <FormLabel>Additional Context (Optional)</FormLabel>
                                 <FormControl>
-                                <Input type="number" placeholder="15000" {...field} />
+                                    <Textarea placeholder="e.g., 'His salary is 15,000 AED. He is a project manager from Pakistan.'" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                             )}
                         />
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="city"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>City</FormLabel>
-                                    <FormControl>
-                                    <Input placeholder="Dubai" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="country"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Country</FormLabel>
-                                    <FormControl>
-                                    <Input placeholder="UAE" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                        </div>
                         <DialogFooter>
                             <DialogClose asChild>
-                              <Button variant="outline">Cancel</Button>
+                              <Button variant="outline" disabled={isExtracting}>Cancel</Button>
                             </DialogClose>
-                            <Button type="submit">Add Employee</Button>
+                            <Button type="submit" disabled={isExtracting}>
+                                {isExtracting ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Extracting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Bot className="mr-2 h-4 w-4" />
+                                        Extract & Add Employee
+                                    </>
+                                )}
+                            </Button>
                         </DialogFooter>
                         </form>
                     </Form>
@@ -269,7 +266,7 @@ export default function EmployeeManagement() {
                   <TableCell>{employee.designation}</TableCell>
                   <TableCell>{employee.mobile || 'N/A'}</TableCell>
                   <TableCell>AED {employee.salary.toLocaleString()}</TableCell>
-                  <TableCell>{employee.city}, {employee.country}</TableCell>
+                  <TableCell>{employee.city ? `${employee.city}, ` : ''}{employee.country}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Switch id={`attendance-${employee.id}`} onCheckedChange={(checked) => handleAttendanceChange(employee.id, checked)} />

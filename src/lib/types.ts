@@ -3,7 +3,7 @@ export type Employee = {
   name: string;
   designation: string;
   salary: number;
-  city: string;
+  city?: string;
   country: string;
   mobile?: string;
   attendance?: Record<string, 'present' | 'absent' | 'leave'>;
