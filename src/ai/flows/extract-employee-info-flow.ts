@@ -8,25 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-export const ExtractEmployeeInfoInputSchema = z.object({
-  photoDataUri: z
-    .string()
-    .describe(
-      "A photo of an employee's document (like a resume or ID), as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
-  context: z.string().optional().describe('Optional text providing additional context about the employee, such as their salary or specific role.'),
-});
-export type ExtractEmployeeInfoInput = z.infer<typeof ExtractEmployeeInfoInputSchema>;
-
-export const ExtractEmployeeInfoOutputSchema = z.object({
-  name: z.string().describe("The full name of the employee."),
-  designation: z.string().describe("The job title or designation of the employee."),
-  salary: z.number().describe("The monthly salary of the employee in AED."),
-  nationality: z.string().describe("The nationality or country of origin of the employee."),
-});
-export type ExtractEmployeeInfoOutput = z.infer<typeof ExtractEmployeeInfoOutputSchema>;
+import { ExtractEmployeeInfoInputSchema, ExtractEmployeeInfoOutputSchema, type ExtractEmployeeInfoInput, type ExtractEmployeeInfoOutput } from '@/lib/schema/employee';
 
 export async function extractEmployeeInfo(input: ExtractEmployeeInfoInput): Promise<ExtractEmployeeInfoOutput> {
   return extractEmployeeInfoFlow(input);

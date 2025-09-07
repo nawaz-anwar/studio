@@ -55,20 +55,8 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { extractEmployeeInfo } from '@/lib/actions';
 import { Textarea } from '@/components/ui/textarea';
+import { employeeSchema, extractionSchema } from '@/lib/schema/employee';
 
-const employeeSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters.'),
-  designation: z.string().min(2, 'Designation is required.'),
-  salary: z.coerce.number().positive('Salary must be a positive number.'),
-  city: z.string().optional(),
-  country: z.string().min(2, 'Country is required.'),
-  mobile: z.string().optional(),
-});
-
-const extractionSchema = z.object({
-  photo: z.custom<FileList>().refine(files => files?.length > 0, 'An image is required.'),
-  context: z.string().optional(),
-});
 
 export default function EmployeeManagement() {
   const [employees, setEmployees] = React.useState<Employee[]>([]);

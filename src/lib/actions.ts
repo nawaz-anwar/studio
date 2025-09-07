@@ -2,7 +2,8 @@
 'use server';
 
 import { monthlySalarySummary, MonthlySalarySummaryInput } from '@/ai/flows/monthly-salary-summary';
-import { extractEmployeeInfo as extractEmployeeInfoFlow, ExtractEmployeeInfoInput } from '@/ai/flows/extract-employee-info-flow';
+import { extractEmployeeInfo as extractEmployeeInfoFlow } from '@/ai/flows/extract-employee-info-flow';
+import type { ExtractEmployeeInfoInput } from '@/lib/schema/employee';
 
 export async function generateSalarySummary(input: MonthlySalarySummaryInput) {
   try {
