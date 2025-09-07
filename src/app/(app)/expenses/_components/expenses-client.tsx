@@ -141,11 +141,15 @@ export default function ExpensesClient() {
   async function onExpenseSubmit(values: z.infer<typeof expenseSchema>) {
     setIsProcessing(true);
     try {
-        const newExpenseData = {
-            ...values,
-            quantity: values.quantity || undefined,
+        const newExpenseData: Omit<Expense, 'id'> = {
+            name: values.name,
+            cost: values.cost,
             date: format(values.date, 'yyyy-MM-dd'),
         };
+
+        if (values.quantity) {
+            newExpenseData.quantity = values.quantity;
+        }
 
         const docRef = await addDoc(collection(db, "expenses"), newExpenseData);
         
@@ -172,11 +176,16 @@ export default function ExpensesClient() {
     if (!selectedExpense) return;
     setIsProcessing(true);
     try {
-        const updatedData = {
-            ...values,
-            quantity: values.quantity || undefined,
+        const updatedData: Omit<Expense, 'id'> = {
+            name: values.name,
+            cost: values.cost,
             date: format(values.date, 'yyyy-MM-dd'),
         };
+
+        if (values.quantity) {
+            updatedData.quantity = values.quantity;
+        }
+
         const docRef = doc(db, "expenses", selectedExpense.id);
         await updateDoc(docRef, updatedData);
 
@@ -550,3 +559,5 @@ export default function ExpensesClient() {
     </div>
   );
 }
+
+    
