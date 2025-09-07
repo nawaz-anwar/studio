@@ -74,7 +74,6 @@ export default function ReportsClient() {
 
   const selectedDate = startOfMonth(new Date(parseInt(year), parseInt(month)));
   const daysInMonth = getDaysInMonth(selectedDate);
-  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const monthKey = format(selectedDate, 'yyyy-MM');
 
   const calculateSalaryInfo = React.useCallback((employee: Employee) => {
@@ -221,14 +220,15 @@ export default function ReportsClient() {
                             {daysArray.map((day) => (
                             <TableHead key={day} className="text-center">{day}</TableHead>
                             ))}
-                            <TableHead className="text-center font-bold sticky right-0 z-10 bg-card whitespace-nowrap">Total Present</TableHead>
-                            <TableHead className="text-center font-bold sticky right-0 z-10 bg-card whitespace-nowrap">Overtime Pay (AED)</TableHead>
+                            <TableHead className="text-center font-bold whitespace-nowrap">Total Present</TableHead>
+                            <TableHead className="text-center font-bold whitespace-nowrap">Base Salary (AED)</TableHead>
+                            <TableHead className="text-center font-bold whitespace-nowrap">Overtime Pay (AED)</TableHead>
                             <TableHead className="text-center font-bold sticky right-0 z-10 bg-card whitespace-nowrap">Total Salary (AED)</TableHead>
                         </TableRow>
                         </TableHeader>
                         <TableBody>
                         {employees.map((employee) => {
-                            const { totalPresent, overtimePay, totalSalary } = calculateSalaryInfo(employee);
+                            const { totalPresent, baseCalculatedSalary, overtimePay, totalSalary } = calculateSalaryInfo(employee);
                             return (
                                 <TableRow key={employee.id}>
                                     <TableCell className="font-medium sticky left-0 z-10 bg-card whitespace-nowrap">{employee.name}</TableCell>
@@ -241,8 +241,11 @@ export default function ReportsClient() {
                                             </TableCell>
                                         );
                                     })}
-                                    <TableCell className="text-center font-bold sticky right-0 z-10 bg-card">{totalPresent}</TableCell>
-                                    <TableCell className="text-center font-bold sticky right-0 z-10 bg-card">
+                                    <TableCell className="text-center font-bold">{totalPresent}</TableCell>
+                                    <TableCell className="text-center font-bold">
+                                        {baseCalculatedSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </TableCell>
+                                    <TableCell className="text-center font-bold">
                                         {overtimePay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </TableCell>
                                     <TableCell className="text-center font-bold sticky right-0 z-10 bg-card">
@@ -320,3 +323,5 @@ export default function ReportsClient() {
     </div>
   );
 }
+
+    
