@@ -7,7 +7,7 @@ export type Employee = {
   country: string;
   mobile?: string;
   attendance?: Record<string, 'present' | 'absent' | 'leave'>;
-  overtimeHours?: Record<string, number>; // month-year as key
+  overtimeHours?: Record<string, number>; // month-year (e.g., "2024-07") as key
 };
 
 export type Expense = {
