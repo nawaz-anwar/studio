@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Users, FileText, Menu, CalendarCheck, FilePieChart } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Menu, CalendarCheck, FilePieChart, ReceiptText } from 'lucide-react';
 
 import {
   SidebarProvider,
@@ -63,6 +63,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <span>Attendance</span>
                 </NavLink>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <NavLink href="/expenses">
+                    <ReceiptText />
+                    <span>Expenses</span>
+                </NavLink>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <NavLink href="/payroll">
                 <FileText />
@@ -109,7 +115,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </DropdownMenu>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="relative z-0">
+      <SidebarInset>
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 lg:border-b">
           <Sheet>
             <SheetTrigger asChild>
@@ -138,6 +144,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <NavLink href="/attendance" isMobile>
                     <CalendarCheck className="h-5 w-5" />
                     Attendance
+                </NavLink>
+                 <NavLink href="/expenses" isMobile>
+                    <ReceiptText className="h-5 w-5" />
+                    Expenses
                 </NavLink>
                 <NavLink href="/payroll" isMobile>
                     <FileText className="h-5 w-5" />
