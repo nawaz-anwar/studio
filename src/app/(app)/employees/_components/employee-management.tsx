@@ -4,7 +4,7 @@ import * as React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PlusCircle, MoreHorizontal, Bot, Loader2, UserPlus } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Bot, Loader2, UserPlus, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -69,6 +69,10 @@ import { extractEmployeeInfo } from '@/lib/actions';
 import { Textarea } from '@/components/ui/textarea';
 import { employeeSchema, extractionSchema } from '@/lib/schema/employee';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 
 export default function EmployeeManagement() {
@@ -77,6 +81,7 @@ export default function EmployeeManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
+  const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
   const { toast } = useToast();
   
   const fetchEmployees = React.useCallback(async () => {
@@ -261,19 +266,44 @@ export default function EmployeeManagement() {
     }
   }
 
+  const handleAttendanceChange = async (employeeId: string, isPresent: boolean) => {
+    const dateKey = format(selectedDate, 'yyyy-MM-dd');
+    const employeeRef = doc(db, "employees", employeeId);
+    
+    try {
+      // We use dot notation to update a nested field in the 'attendance' map.
+      await updateDoc(employeeRef, {
+        [`attendance.${dateKey}`]: isPresent ? 'present' : 'absent'
+      });
+      
+      // Update local state to reflect the change immediately
+      setEmployees(prev => 
+        prev.map(emp => 
+          emp.id === employeeId 
+          ? { ...emp, attendance: { ...emp.attendance, [dateKey]: isPresent ? 'present' : 'absent' } } 
+          : emp
+        )
+      );
 
-  const handleAttendanceChange = (employeeId: string, isPresent: boolean) => {
-    // This is a simplified representation. A real app would use the current date.
-    console.log(`Attendance for ${employeeId} marked as ${isPresent ? 'Present' : 'Absent'}`);
-    toast({
-      description: `Attendance marked for ${employeeId}.`
-    })
+      toast({
+        description: `Attendance for ${dateKey} marked successfully.`
+      });
+    } catch (error) {
+      console.error("Error updating attendance: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not update attendance.",
+      });
+    }
   };
   
   const openEditDialog = (employee: Employee) => {
     setSelectedEmployee(employee);
     setIsEditDialogOpen(true);
   };
+  
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -282,111 +312,135 @@ export default function EmployeeManagement() {
             <div className="flex items-start justify-between">
                 <div>
                     <CardTitle>Employees</CardTitle>
-                    <CardDescription>Manage your company's employees.</CardDescription>
+                    <CardDescription>Manage your company's employees and their attendance.</CardDescription>
                 </div>
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                    <DialogTrigger asChild>
-                    <Button size="sm" className="gap-1">
-                        <PlusCircle className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                        Add Employee
-                        </span>
-                    </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[480px]">
-                    <DialogHeader>
-                        <DialogTitle>Add Employee</DialogTitle>
-                        <DialogDescription>
-                           Add a new employee using AI extraction or manual entry.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <Tabs defaultValue="ai" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="ai">
-                                <Bot className="mr-2 h-4 w-4" />
-                                Add with AI
-                            </TabsTrigger>
-                            <TabsTrigger value="manual">
-                                <UserPlus className="mr-2 h-4 w-4" />
-                                Manual Entry
-                            </TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="ai" className="pt-4">
-                             <Form {...extractionForm}>
-                                <form onSubmit={extractionForm.handleSubmit(handleExtraction)} className="space-y-4">
-                                <FormField
-                                    control={extractionForm.control}
-                                    name="photo"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Employee Document(s)</FormLabel>
-                                        <FormControl>
-                                            <Input type="file" accept="image/*" {...fileRef} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={extractionForm.control}
-                                    name="context"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Additional Context (Optional)</FormLabel>
-                                        <FormControl>
-                                            <Textarea placeholder="e.g., 'Salaries are 15000, 12000, and 8000 AED respectively.'" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                    <Button variant="outline" disabled={isProcessing}>Cancel</Button>
-                                    </DialogClose>
-                                    <Button type="submit" disabled={isProcessing}>
-                                        {isProcessing ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Extracting...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Bot className="mr-2 h-4 w-4" />
-                                                Extract & Add
-                                            </>
+                <div className="flex items-center gap-2">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                            "w-[240px] justify-start text-left font-normal",
+                            !selectedDate && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={(date) => setSelectedDate(date || new Date())}
+                            initialFocus
+                        />
+                        </PopoverContent>
+                    </Popover>
+                    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                        <DialogTrigger asChild>
+                        <Button size="sm" className="gap-1">
+                            <PlusCircle className="h-3.5 w-3.5" />
+                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                            Add Employee
+                            </span>
+                        </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[480px]">
+                        <DialogHeader>
+                            <DialogTitle>Add Employee</DialogTitle>
+                            <DialogDescription>
+                               Add a new employee using AI extraction or manual entry.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <Tabs defaultValue="ai" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="ai">
+                                    <Bot className="mr-2 h-4 w-4" />
+                                    Add with AI
+                                </TabsTrigger>
+                                <TabsTrigger value="manual">
+                                    <UserPlus className="mr-2 h-4 w-4" />
+                                    Manual Entry
+                                </TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="ai" className="pt-4">
+                                 <Form {...extractionForm}>
+                                    <form onSubmit={extractionForm.handleSubmit(handleExtraction)} className="space-y-4">
+                                    <FormField
+                                        control={extractionForm.control}
+                                        name="photo"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Employee Document(s)</FormLabel>
+                                            <FormControl>
+                                                <Input type="file" accept="image/*" {...fileRef} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
                                         )}
-                                    </Button>
-                                </DialogFooter>
-                                </form>
-                            </Form>
-                        </TabsContent>
-                        <TabsContent value="manual" className="pt-4">
-                             <Form {...manualForm}>
-                                <form onSubmit={manualForm.handleSubmit(handleManualSubmit)} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField control={manualForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={manualForm.control} name="designation" render={({ field }) => (<FormItem><FormLabel>Designation</FormLabel><FormControl><Input placeholder="Project Manager" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={manualForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" placeholder="15000" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={manualForm.control} name="country" render={({ field }) => (<FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="UAE" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={manualForm.control} name="city" render={({ field }) => (<FormItem><FormLabel>City (Optional)</FormLabel><FormControl><Input placeholder="Dubai" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={manualForm.control} name="mobile" render={({ field }) => (<FormItem><FormLabel>Mobile (Optional)</FormLabel><FormControl><Input placeholder="+971..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                </div>
-                                <DialogFooter>
-                                    <DialogClose asChild>
+                                    />
+                                    <FormField
+                                        control={extractionForm.control}
+                                        name="context"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Additional Context (Optional)</FormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="e.g., 'Salaries are 15000, 12000, and 8000 AED respectively.'" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <DialogFooter>
+                                        <DialogClose asChild>
                                         <Button variant="outline" disabled={isProcessing}>Cancel</Button>
-                                    </DialogClose>
-                                    <Button type="submit" disabled={isProcessing}>
-                                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
-                                        Add Employee
-                                    </Button>
-                                </DialogFooter>
-                                </form>
-                            </Form>
-                        </TabsContent>
-                    </Tabs>
-                    </DialogContent>
-                </Dialog>
+                                        </DialogClose>
+                                        <Button type="submit" disabled={isProcessing}>
+                                            {isProcessing ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Extracting...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Bot className="mr-2 h-4 w-4" />
+                                                    Extract & Add
+                                                </>
+                                            )}
+                                        </Button>
+                                    </DialogFooter>
+                                    </form>
+                                </Form>
+                            </TabsContent>
+                            <TabsContent value="manual" className="pt-4">
+                                 <Form {...manualForm}>
+                                    <form onSubmit={manualForm.handleSubmit(handleManualSubmit)} className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField control={manualForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={manualForm.control} name="designation" render={({ field }) => (<FormItem><FormLabel>Designation</FormLabel><FormControl><Input placeholder="Project Manager" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={manualForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" placeholder="15000" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={manualForm.control} name="country" render={({ field }) => (<FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="UAE" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={manualForm.control} name="city" render={({ field }) => (<FormItem><FormLabel>City (Optional)</FormLabel><FormControl><Input placeholder="Dubai" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={manualForm.control} name="mobile" render={({ field }) => (<FormItem><FormLabel>Mobile (Optional)</FormLabel><FormControl><Input placeholder="+971..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                    </div>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button variant="outline" disabled={isProcessing}>Cancel</Button>
+                                        </DialogClose>
+                                        <Button type="submit" disabled={isProcessing}>
+                                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                                            Add Employee
+                                        </Button>
+                                    </DialogFooter>
+                                    </form>
+                                </Form>
+                            </TabsContent>
+                        </Tabs>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
         </CardHeader>
         <CardContent>
@@ -398,7 +452,7 @@ export default function EmployeeManagement() {
                 <TableHead>Mobile</TableHead>
                 <TableHead>Salary (AED)</TableHead>
                 <TableHead>Location</TableHead>
-                <TableHead>Today's Attendance</TableHead>
+                <TableHead>Attendance ({format(selectedDate, "PPP")})</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -414,8 +468,12 @@ export default function EmployeeManagement() {
                   <TableCell>{employee.city ? `${employee.city}, ` : ''}{employee.country}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
-                      <Switch id={`attendance-${employee.id}`} onCheckedChange={(checked) => handleAttendanceChange(employee.id, checked)} />
-                      <Label htmlFor={`attendance-${employee.id}`}>Present</Label>
+                        <Switch 
+                            id={`attendance-${employee.id}`} 
+                            checked={employee.attendance?.[dateKey] === 'present'}
+                            onCheckedChange={(checked) => handleAttendanceChange(employee.id, checked)} 
+                        />
+                      <Label htmlFor={`attendance-${employee.id}`}>{employee.attendance?.[dateKey] === 'present' ? 'Present' : 'Absent'}</Label>
                     </div>
                   </TableCell>
                   <TableCell>
