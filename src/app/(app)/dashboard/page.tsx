@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, Users, ListChecks, TrendingDown, TrendingUp, Briefcase } from "lucide-react";
+import { DollarSign, Users, TrendingDown, Briefcase } from "lucide-react";
 import DashboardClient from "./_components/dashboard-client";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, limit, orderBy } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import type { Employee, Expense, Task } from "@/lib/types";
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, getDaysInMonth } from 'date-fns';
 import { Badge } from "@/components/ui/badge";
 
 export default async function DashboardPage() {
@@ -19,9 +19,24 @@ export default async function DashboardPage() {
   ]);
 
   // Process Employees
-  const employees = employeesSnapshot.docs.map(doc => doc.data() as Employee);
-  const totalMonthlySalary = employees.reduce((acc, emp) => acc + emp.salary, 0);
+  const employees = employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+  const totalPotentialSalary = employees.reduce((acc, emp) => acc + emp.salary, 0);
   const totalEmployees = employees.length;
+
+  // Calculate current month's salary based on attendance
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const daysInCurrentMonth = getDaysInMonth(now);
+
+  const totalCalculatedSalary = employees.reduce((total, employee) => {
+    const totalPresent = Object.keys(employee.attendance || {}).filter(dateKey => {
+      const d = new Date(dateKey);
+      return d.getFullYear() === currentYear && d.getMonth() === currentMonth && employee.attendance?.[dateKey] === 'present';
+    }).length;
+    const calculatedSalary = (employee.salary / daysInCurrentMonth) * totalPresent;
+    return total + calculatedSalary;
+  }, 0);
+
 
   // Process Expenses
   const allExpenses = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
@@ -49,11 +64,16 @@ export default async function DashboardPage() {
     const monthExpenses = allExpenses
       .filter(exp => format(new Date(exp.date), 'yyyy-MM') === monthKey)
       .reduce((sum, exp) => sum + exp.cost, 0);
+      
+    let salaryForMonth = totalPotentialSalary;
+    if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+      salaryForMonth = totalCalculatedSalary;
+    }
 
     monthlyData.push({
       month: monthName,
       expenses: monthExpenses,
-      salary: totalMonthlySalary 
+      salary: salaryForMonth
     });
   }
   
@@ -65,12 +85,12 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Salary (Monthly)</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Salary (This Month)</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">AED {totalMonthlySalary.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">{totalEmployees} active employees</p>
+            <div className="text-2xl font-bold">AED {totalCalculatedSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <p className="text-xs text-muted-foreground">Based on attendance</p>
           </CardContent>
         </Card>
         <Card>
