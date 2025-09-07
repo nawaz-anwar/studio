@@ -72,15 +72,16 @@ const chartConfig = {
 
 const expenseSchema = z.object({
   name: z.string().min(2, 'Expense name is required.'),
+  quantity: z.coerce.number().positive('Quantity must be a positive number.').optional().or(z.literal('')),
   cost: z.coerce.number().positive('Cost must be a positive number.'),
 });
 
 const mockExpenses = [
-    { id: 1, date: '2024-07-15', name: 'Cement', cost: 1200 },
+    { id: 1, date: '2024-07-15', name: 'Cement', quantity: 50, cost: 1200 },
     { id: 2, date: '2024-07-15', name: 'Car Fuel', cost: 150 },
-    { id: 3, date: '2024-07-14', name: 'Bricks', cost: 2500 },
-    { id: 4, date: '2024-06-20', name: 'Tiles', cost: 3200 },
-    { id: 5, date: '2024-06-18', name: 'Marble', cost: 5000 },
+    { id: 3, date: '2024-07-14', name: 'Bricks', quantity: 1000, cost: 2500 },
+    { id: 4, date: '2024-06-20', name: 'Tiles', quantity: 200, cost: 3200 },
+    { id: 5, date: '2024-06-18', name: 'Marble', quantity: 20, cost: 5000 },
 ];
 
 export default function DashboardClient() {
@@ -93,6 +94,7 @@ export default function DashboardClient() {
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       name: '',
+      quantity: '',
       cost: 0,
     },
   });
@@ -101,7 +103,9 @@ export default function DashboardClient() {
     const newExpense = {
         id: expenses.length + 1,
         date: new Date().toISOString().split('T')[0],
-        ...values
+        name: values.name,
+        cost: values.cost,
+        quantity: values.quantity || undefined,
     };
     setExpenses([newExpense, ...expenses]);
     toast({
@@ -185,6 +189,19 @@ export default function DashboardClient() {
                             </FormItem>
                             )}
                         />
+                         <FormField
+                            control={form.control}
+                            name="quantity"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Quantity</FormLabel>
+                                <FormControl>
+                                <Input type="number" placeholder="50" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name="cost"
@@ -236,6 +253,7 @@ export default function DashboardClient() {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Expense Name</TableHead>
+                  <TableHead>Quantity</TableHead>
                   <TableHead className="text-right">Cost</TableHead>
                 </TableRow>
               </TableHeader>
@@ -245,12 +263,13 @@ export default function DashboardClient() {
                         <TableRow key={expense.id}>
                         <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
                         <TableCell className="font-medium">{expense.name}</TableCell>
+                        <TableCell>{expense.quantity || 'N/A'}</TableCell>
                         <TableCell className="text-right">AED {expense.cost.toLocaleString()}</TableCell>
                         </TableRow>
                     ))
                 ) : (
                     <TableRow>
-                        <TableCell colSpan={3} className="text-center">No expenses recorded for this month.</TableCell>
+                        <TableCell colSpan={4} className="text-center">No expenses recorded for this month.</TableCell>
                     </TableRow>
                 )}
               </TableBody>
