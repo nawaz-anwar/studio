@@ -151,9 +151,8 @@ export default function ReportsClient() {
                 </div>
             </div>
         </CardHeader>
-        <CardContent>
-          <div className="relative w-full overflow-x-auto">
-            <Table className="min-w-full">
+        <CardContent className="relative overflow-x-auto">
+            <Table>
                 <TableHeader>
                 <TableRow>
                     <TableHead className="sticky left-0 z-10 bg-card whitespace-nowrap">Employee</TableHead>
@@ -188,7 +187,6 @@ export default function ReportsClient() {
                 })}
                 </TableBody>
             </Table>
-          </div>
         </CardContent>
       </Card>
     </div>
