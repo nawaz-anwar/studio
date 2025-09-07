@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -10,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -49,6 +49,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import type { Expense } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 const chartData = [
   { month: 'January', revenue: 18600, expenses: 8000 },
@@ -76,19 +80,30 @@ const expenseSchema = z.object({
   cost: z.coerce.number().positive('Cost must be a positive number.'),
 });
 
-const mockExpenses = [
-    { id: 1, date: '2024-07-15', name: 'Cement', quantity: 50, cost: 1200 },
-    { id: 2, date: '2024-07-15', name: 'Car Fuel', cost: 150 },
-    { id: 3, date: '2024-07-14', name: 'Bricks', quantity: 1000, cost: 2500 },
-    { id: 4, date: '2024-06-20', name: 'Tiles', quantity: 200, cost: 3200 },
-    { id: 5, date: '2024-06-18', name: 'Marble', quantity: 20, cost: 5000 },
-];
-
 export default function DashboardClient() {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
-  const [expenses, setExpenses] = React.useState(mockExpenses);
+  const [expenses, setExpenses] = React.useState<Expense[]>([]);
   const [filterMonth, setFilterMonth] = React.useState((new Date().getMonth() + 1).toString());
   const { toast } = useToast();
+  
+  const fetchExpenses = React.useCallback(async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "expenses"));
+      const expensesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setExpenses(expensesData);
+    } catch (error) {
+      console.error("Error fetching expenses: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not fetch expenses from the database.",
+      });
+    }
+  }, [toast]);
+
+  React.useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
 
   const form = useForm<z.infer<typeof expenseSchema>>({
     resolver: zodResolver(expenseSchema),
@@ -99,20 +114,32 @@ export default function DashboardClient() {
     },
   });
 
-  function onExpenseSubmit(values: z.infer<typeof expenseSchema>) {
-    const newExpense = {
-        id: expenses.length + 1,
-        date: new Date().toISOString().split('T')[0],
-        name: values.name,
-        cost: values.cost,
-        quantity: values.quantity || undefined,
-    };
-    setExpenses([newExpense, ...expenses]);
-    toast({
-        title: "Success!",
-        description: "New expense has been added."
-    });
-    form.reset();
+  async function onExpenseSubmit(values: z.infer<typeof expenseSchema>) {
+    try {
+        const newExpenseData = {
+            date: format(new Date(), 'yyyy-MM-dd'),
+            name: values.name,
+            cost: values.cost,
+            ...(values.quantity && { quantity: values.quantity }),
+        };
+
+        const docRef = await addDoc(collection(db, "expenses"), newExpenseData);
+        
+        setExpenses(prev => [{ id: docRef.id, ...newExpenseData }, ...prev]);
+        
+        toast({
+            title: "Success!",
+            description: "New expense has been added."
+        });
+        form.reset();
+    } catch (error) {
+        console.error("Error adding expense: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not add expense to the database.",
+        });
+    }
   }
 
   const handleDownloadPdf = () => {
@@ -294,3 +321,5 @@ export default function DashboardClient() {
     </div>
   );
 }
+
+    

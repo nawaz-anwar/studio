@@ -9,3 +9,13 @@ export type Employee = {
   attendance?: Record<string, 'present' | 'absent' | 'leave'>;
   overtimeHours?: Record<string, number>; // month-year as key
 };
+
+export type Expense = {
+    id: string;
+    date: string;
+    name: string;
+    quantity?: number;
+    cost: number;
+};
+
+    
