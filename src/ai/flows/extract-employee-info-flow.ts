@@ -8,18 +8,20 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { ExtractEmployeeInfoInputSchema, ExtractEmployeeInfoOutputSchema, type ExtractEmployeeInfoInput, type ExtractEmployeeInfoOutput } from '@/lib/schema/employee';
+import { ExtractEmployeeInfoInputSchema, MultiExtractEmployeeInfoOutputSchema, type ExtractEmployeeInfoInput, type MultiExtractEmployeeInfoOutput } from '@/lib/schema/employee';
 
-export async function extractEmployeeInfo(input: ExtractEmployeeInfoInput): Promise<ExtractEmployeeInfoOutput> {
+
+export async function extractEmployeeInfo(input: ExtractEmployeeInfoInput): Promise<MultiExtractEmployeeInfoOutput> {
   return extractEmployeeInfoFlow(input);
 }
 
 const prompt = ai.definePrompt({
   name: 'extractEmployeeInfoPrompt',
   input: {schema: ExtractEmployeeInfoInputSchema},
-  output: {schema: ExtractEmployeeInfoOutputSchema},
+  output: {schema: MultiExtractEmployeeInfoOutputSchema},
   prompt: `You are an expert HR assistant responsible for employee data entry.
-Your task is to extract the following information from the provided image and text:
+Your task is to extract information for all employees found in the provided image and text context.
+For each employee, extract the following information:
 - Full Name
 - Designation (Job Title)
 - Monthly Salary (in AED)
@@ -27,6 +29,7 @@ Your task is to extract the following information from the provided image and te
 
 Analyze the image and any additional context carefully. The salary might be mentioned in the text context.
 Prioritize information from the text if it conflicts with the image. If any information is missing, make a reasonable inference based on the data provided, but do not invent details that are not present.
+Return an array of all employees found.
 
 Image:
 {{media url=photoDataUri}}
@@ -40,7 +43,7 @@ const extractEmployeeInfoFlow = ai.defineFlow(
   {
     name: 'extractEmployeeInfoFlow',
     inputSchema: ExtractEmployeeInfoInputSchema,
-    outputSchema: ExtractEmployeeInfoOutputSchema,
+    outputSchema: MultiExtractEmployeeInfoOutputSchema,
   },
   async input => {
     const {output} = await prompt(input);

@@ -25,10 +25,14 @@ export const ExtractEmployeeInfoInputSchema = z.object({
 });
 export type ExtractEmployeeInfoInput = z.infer<typeof ExtractEmployeeInfoInputSchema>;
 
-export const ExtractEmployeeInfoOutputSchema = z.object({
+const SingleEmployeeOutputSchema = z.object({
   name: z.string().describe("The full name of the employee."),
   designation: z.string().describe("The job title or designation of the employee."),
   salary: z.number().describe("The monthly salary of the employee in AED."),
   nationality: z.string().describe("The nationality or country of origin of the employee."),
 });
-export type ExtractEmployeeInfoOutput = z.infer<typeof ExtractEmployeeInfoOutputSchema>;
+
+export const MultiExtractEmployeeInfoOutputSchema = z.object({
+    employees: z.array(SingleEmployeeOutputSchema).describe("An array of all employees found in the document.")
+});
+export type MultiExtractEmployeeInfoOutput = z.infer<typeof MultiExtractEmployeeInfoOutputSchema>;
