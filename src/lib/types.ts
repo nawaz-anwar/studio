@@ -18,4 +18,11 @@ export type Expense = {
     cost: number;
 };
 
-    
+export type Task = {
+    id: string;
+    title: string;
+    description?: string;
+    status: 'To Do' | 'In Progress' | 'Done';
+    priority: 'Low' | 'Medium' | 'High';
+    dueDate: string;
+}

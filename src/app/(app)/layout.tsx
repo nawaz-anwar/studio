@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Users, FileText, Menu, CalendarCheck, FilePieChart, ReceiptText } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Menu, CalendarCheck, FilePieChart, ReceiptText, ListTodo } from 'lucide-react';
 
 import {
   SidebarProvider,
@@ -67,6 +67,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <NavLink href="/expenses">
                     <ReceiptText />
                     <span>Expenses</span>
+                </NavLink>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <NavLink href="/tasks">
+                    <ListTodo />
+                    <span>Tasks</span>
                 </NavLink>
             </SidebarMenuItem>
             <SidebarMenuItem>
@@ -142,6 +148,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                  <NavLink href="/expenses" isMobile>
                     <ReceiptText className="h-5 w-5" />
                     Expenses
+                </NavLink>
+                 <NavLink href="/tasks" isMobile>
+                    <ListTodo className="h-5 w-5" />
+                    Tasks
                 </NavLink>
                 <NavLink href="/reports" isMobile>
                     <FilePieChart className="h-5 w-5" />
