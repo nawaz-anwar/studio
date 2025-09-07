@@ -125,11 +125,17 @@ export default function ReportsClient() {
   }, 500);
 
   const handleExportAttendanceCsv = () => {
-    const headers = ['Employee', 'Total Present', 'Base Salary (AED)', 'Overtime Pay (AED)', 'Total Salary (AED)'];
+    const headers = ['Employee', 'Total Present', 'Overtime Pay (AED)', 'Total Monthly Salary (AED)', 'Total Salary (AED)'];
     
     const rows = employees.map(employee => {
         const { totalPresent, baseCalculatedSalary, overtimePay, totalSalary } = calculateSalaryInfo(employee);
-        return [employee.name, totalPresent, baseCalculatedSalary.toFixed(2), overtimePay.toFixed(2), totalSalary.toFixed(2)].join(',');
+        return [
+            employee.name, 
+            totalPresent, 
+            overtimePay.toFixed(2), 
+            baseCalculatedSalary.toFixed(2), 
+            totalSalary.toFixed(2)
+        ].join(',');
     });
 
     downloadCsv([headers.join(','), ...rows].join('\n'), `Attendance_Salary_Report_${months.find(m => m.value === month)?.label}_${year}.csv`);
