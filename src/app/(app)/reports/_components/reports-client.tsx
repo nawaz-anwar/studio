@@ -128,23 +128,32 @@ export default function ReportsClient() {
                     {daysArray.map((day) => (
                     <TableHead key={day} className="text-center">{day}</TableHead>
                     ))}
+                    <TableHead className="text-center font-bold">Total Present</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {employees.map((employee) => (
-                    <TableRow key={employee.id}>
-                    <TableCell className="font-medium sticky left-0 z-10 bg-card">{employee.name}</TableCell>
-                    {daysArray.map((day) => {
-                        const dateKey = format(new Date(parseInt(year), parseInt(month), day), 'yyyy-MM-dd');
-                        const attendanceStatus = employee.attendance?.[dateKey];
-                        return (
-                            <TableCell key={day} className="text-center">
-                                {getAttendanceMark(attendanceStatus)}
-                            </TableCell>
-                        );
-                    })}
-                    </TableRow>
-                ))}
+                {employees.map((employee) => {
+                    const totalPresent = Object.keys(employee.attendance || {}).filter(dateKey => {
+                        const d = new Date(dateKey);
+                        return d.getFullYear() === parseInt(year) && d.getMonth() === parseInt(month) && employee.attendance?.[dateKey] === 'present';
+                    }).length;
+                    
+                    return (
+                        <TableRow key={employee.id}>
+                            <TableCell className="font-medium sticky left-0 z-10 bg-card">{employee.name}</TableCell>
+                            {daysArray.map((day) => {
+                                const dateKey = format(new Date(parseInt(year), parseInt(month), day), 'yyyy-MM-dd');
+                                const attendanceStatus = employee.attendance?.[dateKey];
+                                return (
+                                    <TableCell key={day} className="text-center">
+                                        {getAttendanceMark(attendanceStatus)}
+                                    </TableCell>
+                                );
+                            })}
+                            <TableCell className="text-center font-bold">{totalPresent}</TableCell>
+                        </TableRow>
+                    );
+                })}
                 </TableBody>
             </Table>
           </div>
