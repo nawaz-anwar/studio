@@ -7,6 +7,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from '@/components/ui/card';
 import {
   ChartContainer,
@@ -18,56 +19,53 @@ import {
 } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
-const chartData = [
-  { month: 'January', revenue: 18600, expenses: 8000 },
-  { month: 'February', revenue: 30500, expenses: 12000 },
-  { month: 'March', revenue: 23700, expenses: 9500 },
-  { month: 'April', revenue: 7300, expenses: 4500 },
-  { month: 'May', revenue: 20900, expenses: 11000 },
-  { month: 'June', revenue: 21400, expenses: 13000 },
-];
+type ChartData = {
+  month: string;
+  expenses: number;
+  salary: number;
+};
 
 const chartConfig = {
-  revenue: {
-    label: 'Revenue',
-    color: 'hsl(var(--chart-1))',
-  },
   expenses: {
     label: 'Expenses',
     color: 'hsl(var(--chart-2))',
   },
+  salary: {
+    label: 'Salary',
+    color: 'hsl(var(--chart-1))',
+  },
 } satisfies ChartConfig;
 
 
-export default function DashboardClient() {
+export default function DashboardClient({ chartData }: { chartData: ChartData[] }) {
   
   return (
-    <Card>
+    <Card className="h-full">
         <CardHeader>
-        <CardTitle>Financial Overview</CardTitle>
+            <CardTitle>Financial Overview (Last 6 Months)</CardTitle>
+            <CardDescription>Monthly expenses vs. fixed monthly salary cost.</CardDescription>
         </CardHeader>
         <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-            <BarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-                dataKey="month"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                tickFormatter={(value) => value.slice(0, 3)}
-            />
-            <YAxis
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `AED ${Number(value) / 1000}k`}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-            <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
-            </BarChart>
-        </ChartContainer>
+            <ChartContainer config={chartConfig} className="min-h-[400px] w-full">
+                <BarChart accessibilityLayer data={chartData}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        tickMargin={10}
+                        axisLine={false}
+                    />
+                    <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `AED ${Number(value) / 1000}k`}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="salary" fill="var(--color-salary)" radius={4} />
+                    <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
+                </BarChart>
+            </ChartContainer>
         </CardContent>
     </Card>
   );

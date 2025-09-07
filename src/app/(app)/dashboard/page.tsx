@@ -1,48 +1,160 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { DollarSign, Users, ListChecks, TrendingDown, TrendingUp, Briefcase } from "lucide-react";
 import DashboardClient from "./_components/dashboard-client";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, where, limit, orderBy } from 'firebase/firestore';
+import type { Employee, Expense, Task } from "@/lib/types";
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { Badge } from "@/components/ui/badge";
 
-export default function DashboardPage() {
-  const totalRevenue = 54231.89;
-  const totalExpenses = 21831.21;
-  const profit = totalRevenue - totalExpenses;
+export default async function DashboardPage() {
+
+  const now = new Date();
+  
+  // Fetch all data in parallel
+  const [employeesSnapshot, expensesSnapshot, tasksSnapshot] = await Promise.all([
+    getDocs(collection(db, "employees")),
+    getDocs(collection(db, "expenses")),
+    getDocs(collection(db, "tasks"))
+  ]);
+
+  // Process Employees
+  const employees = employeesSnapshot.docs.map(doc => doc.data() as Employee);
+  const totalMonthlySalary = employees.reduce((acc, emp) => acc + emp.salary, 0);
+  const totalEmployees = employees.length;
+
+  // Process Expenses
+  const allExpenses = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+  
+  const currentMonthStart = startOfMonth(now);
+  const currentMonthEnd = endOfMonth(now);
+
+  const currentMonthExpenses = allExpenses.filter(exp => {
+    const expDate = new Date(exp.date);
+    return expDate >= currentMonthStart && expDate <= currentMonthEnd;
+  });
+  const totalCurrentMonthExpenses = currentMonthExpenses.reduce((acc, exp) => acc + exp.cost, 0);
+
+  // Process Tasks
+  const allTasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+  const ongoingTasks = allTasks.filter(task => task.status === 'In Progress');
+
+  // Prepare data for chart
+  const monthlyData: { month: string, expenses: number, salary: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = subMonths(now, i);
+    const monthKey = format(d, 'yyyy-MM');
+    const monthName = format(d, 'MMMM');
+    
+    const monthExpenses = allExpenses
+      .filter(exp => format(new Date(exp.date), 'yyyy-MM') === monthKey)
+      .reduce((sum, exp) => sum + exp.cost, 0);
+
+    monthlyData.push({
+      month: monthName,
+      expenses: monthExpenses,
+      salary: totalMonthlySalary 
+    });
+  }
+  
+  const recentExpenses = allExpenses.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Salary (Monthly)</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">AED {totalRevenue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+            <div className="text-2xl font-bold">AED {totalMonthlySalary.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">{totalEmployees} active employees</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Expenses (This Month)</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">AED {totalExpenses.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+12.2% from last month</p>
+            <div className="text-2xl font-bold">AED {totalCurrentMonthExpenses.toLocaleString()}</div>
+             <p className="text-xs text-muted-foreground">{currentMonthExpenses.length} transactions this month</p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalEmployees}</div>
+            <p className="text-xs text-muted-foreground">Across all departments</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profit</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Ongoing Tasks</CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">AED {profit.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+25.3% from last month</p>
+            <div className="text-2xl font-bold">{ongoingTasks.length}</div>
+            <p className="text-xs text-muted-foreground">{allTasks.length} total tasks</p>
           </CardContent>
         </Card>
       </div>
 
-      <DashboardClient />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <DashboardClient chartData={monthlyData} />
+        </div>
+        <div className="flex flex-col gap-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ongoing Tasks</CardTitle>
+                    <CardDescription>A quick look at tasks currently in progress.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                   {ongoingTasks.length > 0 ? (
+                     <ul className="space-y-2">
+                        {ongoingTasks.slice(0, 5).map(task => (
+                            <li key={task.id} className="flex items-center justify-between text-sm">
+                                <span>{task.title}</span>
+                                <Badge variant={task.priority === 'High' ? 'destructive' : 'secondary'}>{task.priority}</Badge>
+                            </li>
+                        ))}
+                    </ul>
+                   ) : (
+                    <p className="text-sm text-muted-foreground">No tasks are currently in progress.</p>
+                   )}
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Recent Expenses</CardTitle>
+                    <CardDescription>Top 5 most recent transactions.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {recentExpenses.length > 0 ? (
+                        <ul className="space-y-2">
+                            {recentExpenses.map(expense => (
+                                <li key={expense.id} className="flex items-center justify-between text-sm">
+                                    <div>
+                                        <p className="font-medium">{expense.name}</p>
+                                        <p className="text-xs text-muted-foreground">{format(new Date(expense.date), 'PPP')}</p>
+                                    </div>
+                                    <span className="font-mono">AED {expense.cost.toLocaleString()}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">No expenses recorded yet.</p>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+      </div>
     </div>
   );
 }
