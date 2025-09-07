@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Building2, LayoutDashboard, Users, FileText, Menu } from 'lucide-react';
+import Image from 'next/image';
+import { LayoutDashboard, Users, FileText, Menu } from 'lucide-react';
 
 import {
   SidebarProvider,
@@ -31,9 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-              <Building2 className="h-5 w-5" />
-            </Button>
+            <Image src="https://picsum.photos/40/40" alt="CreteFlow Logo" width={40} height={40} className="rounded-full" data-ai-hint="logo" />
             <div className="flex flex-col">
               <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
                 CreteFlow
@@ -113,7 +112,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   href="#"
                   className="group flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground"
                 >
-                  <Building2 className="h-5 w-5 transition-all group-hover:scale-110" />
+                  <Image src="https://picsum.photos/40/40" alt="CreteFlow Logo" width={32} height={32} className="rounded-full" data-ai-hint="logo" />
                   <span className="sr-only">CreteFlow</span>
                 </Link>
                 <NavLink href="/dashboard" isMobile>
