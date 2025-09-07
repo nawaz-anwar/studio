@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -57,13 +58,54 @@ export default function ReportsClient() {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  const handleExportPdf = () => {
-    toast({
-      title: "Generating PDF...",
-      description: "Your attendance report is being generated and will download shortly.",
+  const getAttendanceMark = (status: 'present' | 'absent' | 'leave' | undefined) => {
+    switch(status) {
+        case 'present': return 'P';
+        case 'absent': return 'A';
+        case 'leave': return 'L';
+        default: return '-';
+    }
+  };
+
+  const handleExportCsv = () => {
+    const selectedDate = startOfMonth(new Date(parseInt(year), parseInt(month)));
+    const daysInMonth = getDaysInMonth(selectedDate);
+    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+    const headers = ['Employee', ...daysArray.map(day => `Day ${day}`), 'Total Present'];
+    
+    const rows = employees.map(employee => {
+        const totalPresent = Object.keys(employee.attendance || {}).filter(dateKey => {
+            const d = new Date(dateKey);
+            return d.getFullYear() === parseInt(year) && d.getMonth() === parseInt(month) && employee.attendance?.[dateKey] === 'present';
+        }).length;
+
+        const attendanceRow = daysArray.map(day => {
+            const dateKey = format(new Date(parseInt(year), parseInt(month), day), 'yyyy-MM-dd');
+            const attendanceStatus = employee.attendance?.[dateKey];
+            return getAttendanceMark(attendanceStatus);
+        });
+
+        return [employee.name, ...attendanceRow, totalPresent].join(',');
     });
-    // In a real app, you would use a library like jsPDF and jsPDF-AutoTable here.
-    console.log("Exporting PDF for", { month, year });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    const monthName = months.find(m => m.value === month)?.label;
+    link.setAttribute("download", `Attendance_Report_${monthName}_${year}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+        title: "CSV Exported",
+        description: "The attendance report has been downloaded successfully.",
+      });
   };
   
   const selectedDate = startOfMonth(new Date(parseInt(year), parseInt(month)));
@@ -76,16 +118,6 @@ export default function ReportsClient() {
     { value: "6", label: "July" }, { value: "7", label: "August" }, { value: "8", label: "September" },
     { value: "9", label: "October" }, { value: "10", label: "November" }, { value: "11", label: "December" }
   ];
-
-  const getAttendanceMark = (status: 'present' | 'absent' | 'leave' | undefined) => {
-    switch(status) {
-        case 'present': return 'P';
-        case 'absent': return 'A';
-        case 'leave': return 'L';
-        default: return '-';
-    }
-  };
-
 
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8">
@@ -112,23 +144,23 @@ export default function ReportsClient() {
                         onChange={(e) => setYear(e.target.value)}
                         className="w-[100px]"
                     />
-                    <Button onClick={handleExportPdf}>
+                    <Button onClick={handleExportCsv}>
                         <Download className="mr-2 h-4 w-4" />
-                        Export PDF
+                        Export CSV
                     </Button>
                 </div>
             </div>
         </CardHeader>
         <CardContent>
           <div className="w-full overflow-x-auto">
-            <Table>
+            <Table className="min-w-full">
                 <TableHeader>
                 <TableRow>
-                    <TableHead className="sticky left-0 z-10 bg-card">Employee</TableHead>
+                    <TableHead className="sticky left-0 z-10 bg-card whitespace-nowrap">Employee</TableHead>
                     {daysArray.map((day) => (
                     <TableHead key={day} className="text-center">{day}</TableHead>
                     ))}
-                    <TableHead className="text-center font-bold">Total Present</TableHead>
+                    <TableHead className="text-center font-bold sticky right-0 z-10 bg-card whitespace-nowrap">Total Present</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -140,7 +172,7 @@ export default function ReportsClient() {
                     
                     return (
                         <TableRow key={employee.id}>
-                            <TableCell className="font-medium sticky left-0 z-10 bg-card">{employee.name}</TableCell>
+                            <TableCell className="font-medium sticky left-0 z-10 bg-card whitespace-nowrap">{employee.name}</TableCell>
                             {daysArray.map((day) => {
                                 const dateKey = format(new Date(parseInt(year), parseInt(month), day), 'yyyy-MM-dd');
                                 const attendanceStatus = employee.attendance?.[dateKey];
@@ -150,7 +182,7 @@ export default function ReportsClient() {
                                     </TableCell>
                                 );
                             })}
-                            <TableCell className="text-center font-bold">{totalPresent}</TableCell>
+                            <TableCell className="text-center font-bold sticky right-0 z-10 bg-card">{totalPresent}</TableCell>
                         </TableRow>
                     );
                 })}
