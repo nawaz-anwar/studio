@@ -67,18 +67,20 @@ export default function ReportsClient() {
     }
   };
 
-  const handleExportCsv = () => {
-    const selectedDate = startOfMonth(new Date(parseInt(year), parseInt(month)));
-    const daysInMonth = getDaysInMonth(selectedDate);
-    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const selectedDate = startOfMonth(new Date(parseInt(year), parseInt(month)));
+  const daysInMonth = getDaysInMonth(selectedDate);
+  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-    const headers = ['Employee', ...daysArray.map(day => `Day ${day}`), 'Total Present'];
+  const handleExportCsv = () => {
+    const headers = ['Employee', ...daysArray.map(day => `Day ${day}`), 'Total Present', 'Calculated Salary (AED)'];
     
     const rows = employees.map(employee => {
         const totalPresent = Object.keys(employee.attendance || {}).filter(dateKey => {
             const d = new Date(dateKey);
             return d.getFullYear() === parseInt(year) && d.getMonth() === parseInt(month) && employee.attendance?.[dateKey] === 'present';
         }).length;
+        
+        const calculatedSalary = (employee.salary / daysInMonth) * totalPresent;
 
         const attendanceRow = daysArray.map(day => {
             const dateKey = format(new Date(parseInt(year), parseInt(month), day), 'yyyy-MM-dd');
@@ -86,7 +88,7 @@ export default function ReportsClient() {
             return getAttendanceMark(attendanceStatus);
         });
 
-        return [employee.name, ...attendanceRow, totalPresent].join(',');
+        return [employee.name, ...attendanceRow, totalPresent, calculatedSalary.toFixed(2)].join(',');
     });
 
     const csvContent = [headers.join(','), ...rows].join('\n');
@@ -108,10 +110,6 @@ export default function ReportsClient() {
       });
   };
   
-  const selectedDate = startOfMonth(new Date(parseInt(year), parseInt(month)));
-  const daysInMonth = getDaysInMonth(selectedDate);
-  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
   const months = [
     { value: "0", label: "January" }, { value: "1", label: "February" }, { value: "2", label: "March" },
     { value: "3", label: "April" }, { value: "4", label: "May" }, { value: "5", label: "June" },
@@ -160,6 +158,7 @@ export default function ReportsClient() {
                   <TableHead key={day} className="text-center">{day}</TableHead>
                 ))}
                 <TableHead className="text-center font-bold sticky right-0 z-10 bg-card whitespace-nowrap">Total Present</TableHead>
+                <TableHead className="text-center font-bold sticky right-0 z-10 bg-card whitespace-nowrap">Calculated Salary (AED)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -168,6 +167,8 @@ export default function ReportsClient() {
                       const d = new Date(dateKey);
                       return d.getFullYear() === parseInt(year) && d.getMonth() === parseInt(month) && employee.attendance?.[dateKey] === 'present';
                   }).length;
+
+                  const calculatedSalary = (employee.salary / daysInMonth) * totalPresent;
                   
                   return (
                       <TableRow key={employee.id}>
@@ -182,6 +183,9 @@ export default function ReportsClient() {
                               );
                           })}
                           <TableCell className="text-center font-bold sticky right-0 z-10 bg-card">{totalPresent}</TableCell>
+                          <TableCell className="text-center font-bold sticky right-0 z-10 bg-card">
+                            {calculatedSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
                       </TableRow>
                   );
               })}
