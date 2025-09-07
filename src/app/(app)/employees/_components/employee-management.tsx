@@ -32,11 +32,23 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   Form,
@@ -52,7 +64,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, writeBatch, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, writeBatch, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { extractEmployeeInfo } from '@/lib/actions';
 import { Textarea } from '@/components/ui/textarea';
 import { employeeSchema, extractionSchema } from '@/lib/schema/employee';
@@ -61,7 +73,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function EmployeeManagement() {
   const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const { toast } = useToast();
   
@@ -99,6 +113,17 @@ export default function EmployeeManagement() {
         mobile: "",
     }
   });
+  
+  const editForm = useForm<z.infer<typeof employeeSchema>>({
+    resolver: zodResolver(employeeSchema),
+  });
+
+  React.useEffect(() => {
+    if (selectedEmployee) {
+      editForm.reset(selectedEmployee);
+    }
+  }, [selectedEmployee, editForm]);
+
 
   const fileRef = extractionForm.register("photo");
 
@@ -145,7 +170,7 @@ export default function EmployeeManagement() {
                 description: `${newEmployees.length} employee(s) extracted and added.`,
             });
             extractionForm.reset();
-            setIsDialogOpen(false);
+            setIsAddDialogOpen(false);
         } else {
             throw new Error(result.error || "Failed to extract employee information.");
         }
@@ -178,7 +203,7 @@ export default function EmployeeManagement() {
             description: 'New employee has been added.',
         });
         manualForm.reset();
-        setIsDialogOpen(false);
+        setIsAddDialogOpen(false);
     } catch (error: any) {
         console.error("Error saving employee: ", error);
         toast({
@@ -191,6 +216,51 @@ export default function EmployeeManagement() {
     }
   }
 
+  async function handleEditSubmit(values: z.infer<typeof employeeSchema>) {
+    if (!selectedEmployee) return;
+    setIsProcessing(true);
+    try {
+        const validatedData = employeeSchema.parse(values);
+        const docRef = doc(db, "employees", selectedEmployee.id);
+        await updateDoc(docRef, validatedData);
+
+        setEmployees(prev => prev.map(emp => emp.id === selectedEmployee.id ? { ...emp, ...validatedData } : emp));
+        toast({
+            title: 'Success!',
+            description: 'Employee details have been updated.',
+        });
+        setIsEditDialogOpen(false);
+        setSelectedEmployee(null);
+    } catch (error) {
+        console.error("Error updating employee: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not update the employee in the database.",
+        });
+    } finally {
+        setIsProcessing(false);
+    }
+  }
+  
+  async function handleDeleteEmployee(employeeId: string) {
+    try {
+        await deleteDoc(doc(db, "employees", employeeId));
+        setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
+        toast({
+            title: 'Success!',
+            description: 'Employee has been deleted.',
+        });
+    } catch (error) {
+        console.error("Error deleting employee: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not delete the employee from the database.",
+        });
+    }
+  }
+
 
   const handleAttendanceChange = (employeeId: string, isPresent: boolean) => {
     // This is a simplified representation. A real app would use the current date.
@@ -198,6 +268,11 @@ export default function EmployeeManagement() {
     toast({
       description: `Attendance marked for ${employeeId}.`
     })
+  };
+  
+  const openEditDialog = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsEditDialogOpen(true);
   };
 
   return (
@@ -209,7 +284,7 @@ export default function EmployeeManagement() {
                     <CardTitle>Employees</CardTitle>
                     <CardDescription>Manage your company's employees.</CardDescription>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                     <DialogTrigger asChild>
                     <Button size="sm" className="gap-1">
                         <PlusCircle className="h-3.5 w-3.5" />
@@ -353,8 +428,30 @@ export default function EmployeeManagement() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEditDialog(employee)}>Edit</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                              Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the employee
+                                and remove their data from our servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)} className="bg-destructive hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -364,6 +461,38 @@ export default function EmployeeManagement() {
           </Table>
         </CardContent>
       </Card>
+      
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Edit Employee</DialogTitle>
+            <DialogDescription>
+              Update the details for {selectedEmployee?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={editForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={editForm.control} name="designation" render={({ field }) => (<FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={editForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={editForm.control} name="country" render={({ field }) => (<FormItem><FormLabel>Country</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={editForm.control} name="city" render={({ field }) => (<FormItem><FormLabel>City (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={editForm.control} name="mobile" render={({ field }) => (<FormItem><FormLabel>Mobile (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline" disabled={isProcessing}>Cancel</Button>
+                </DialogClose>
+                <Button type="submit" disabled={isProcessing}>
+                  {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
