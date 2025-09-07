@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -109,6 +110,17 @@ export default function ReportsClient() {
         description: "The attendance and salary report has been downloaded successfully.",
       });
   };
+
+  const totalCalculatedSalary = React.useMemo(() => {
+    return employees.reduce((acc, employee) => {
+        const totalPresent = Object.keys(employee.attendance || {}).filter(dateKey => {
+            const d = new Date(dateKey);
+            return d.getFullYear() === parseInt(year) && d.getMonth() === parseInt(month) && employee.attendance?.[dateKey] === 'present';
+        }).length;
+        const calculatedSalary = (employee.salary / daysInMonth) * totalPresent;
+        return acc + calculatedSalary;
+    }, 0);
+  }, [employees, year, month, daysInMonth]);
   
   const months = [
     { value: "0", label: "January" }, { value: "1", label: "February" }, { value: "2", label: "March" },
@@ -192,6 +204,11 @@ export default function ReportsClient() {
             </TableBody>
           </Table>
         </CardContent>
+         <CardFooter className="justify-end">
+            <div className="text-lg font-semibold">
+              Total Salary: AED {totalCalculatedSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </CardFooter>
       </Card>
     </div>
   );
