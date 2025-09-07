@@ -21,17 +21,20 @@ import {
 import type { Employee } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, writeBatch } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AttendanceClient() {
   const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
+  const [selectedEmployees, setSelectedEmployees] = React.useState<string[]>([]);
+  const [isUpdating, setIsUpdating] = React.useState(false);
   const { toast } = useToast();
   
   const fetchEmployees = React.useCallback(async () => {
@@ -58,9 +61,11 @@ export default function AttendanceClient() {
     const employeeRef = doc(db, "employees", employeeId);
     
     try {
-      await updateDoc(employeeRef, {
+      const batch = writeBatch(db);
+      batch.update(employeeRef, {
         [`attendance.${dateKey}`]: isPresent ? 'present' : 'absent'
       });
+      await batch.commit();
       
       setEmployees(prev => 
         prev.map(emp => 
@@ -70,9 +75,6 @@ export default function AttendanceClient() {
         )
       );
 
-      toast({
-        description: `Attendance for ${format(selectedDate, "PPP")} marked successfully.`
-      });
     } catch (error) {
       console.error("Error updating attendance: ", error);
       toast({
@@ -80,6 +82,61 @@ export default function AttendanceClient() {
         title: "Error",
         description: "Could not update attendance.",
       });
+    }
+  };
+
+  const handleBulkUpdate = async (status: 'present' | 'absent') => {
+    if (selectedEmployees.length === 0) return;
+    
+    setIsUpdating(true);
+    const dateKey = format(selectedDate, 'yyyy-MM-dd');
+    const batch = writeBatch(db);
+
+    selectedEmployees.forEach(employeeId => {
+        const employeeRef = doc(db, "employees", employeeId);
+        batch.update(employeeRef, { [`attendance.${dateKey}`]: status });
+    });
+
+    try {
+        await batch.commit();
+
+        setEmployees(prev =>
+            prev.map(emp =>
+                selectedEmployees.includes(emp.id)
+                ? { ...emp, attendance: { ...emp.attendance, [dateKey]: status } }
+                : emp
+            )
+        );
+
+        toast({
+            description: `Attendance marked as ${status} for ${selectedEmployees.length} employees.`
+        });
+        setSelectedEmployees([]);
+    } catch (error) {
+        console.error("Error bulk updating attendance: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not perform bulk update.",
+        });
+    } finally {
+        setIsUpdating(false);
+    }
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedEmployees(employees.map(e => e.id));
+    } else {
+      setSelectedEmployees([]);
+    }
+  };
+
+  const handleSelectEmployee = (employeeId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedEmployees(prev => [...prev, employeeId]);
+    } else {
+      setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
     }
   };
   
@@ -92,7 +149,7 @@ export default function AttendanceClient() {
             <div className="flex items-center justify-between">
                 <div>
                     <CardTitle>Daily Attendance</CardTitle>
-                    <CardDescription>Mark employee attendance for the selected date.</CardDescription>
+                    <CardDescription>Mark employee attendance for the selected date. You can select multiple employees to mark attendance in bulk.</CardDescription>
                 </div>
                 <Popover>
                     <PopoverTrigger asChild>
@@ -111,17 +168,34 @@ export default function AttendanceClient() {
                     <Calendar
                         mode="single"
                         selected={selectedDate}
-                        onSelect={(date) => setSelectedDate(date || new Date())}
+                        onSelect={(date) => {
+                            setSelectedDate(date || new Date());
+                            setSelectedEmployees([]); // Reset selection on date change
+                        }}
                         initialFocus
                     />
                     </PopoverContent>
                 </Popover>
             </div>
+            {selectedEmployees.length > 0 && (
+                <div className="flex items-center gap-2 pt-4">
+                    <span className="text-sm text-muted-foreground">{selectedEmployees.length} employee(s) selected</span>
+                    <Button size="sm" onClick={() => handleBulkUpdate('present')} disabled={isUpdating}>Mark as Present</Button>
+                    <Button size="sm" variant="secondary" onClick={() => handleBulkUpdate('absent')} disabled={isUpdating}>Mark as Absent</Button>
+                </div>
+            )}
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">
+                   <Checkbox
+                        checked={selectedEmployees.length > 0 && selectedEmployees.length === employees.length}
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Select all"
+                    />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Designation</TableHead>
                 <TableHead>Attendance ({format(selectedDate, "PPP")})</TableHead>
@@ -129,7 +203,14 @@ export default function AttendanceClient() {
             </TableHeader>
             <TableBody>
               {employees.map((employee) => (
-                <TableRow key={employee.id}>
+                <TableRow key={employee.id} data-state={selectedEmployees.includes(employee.id) && "selected"}>
+                  <TableCell>
+                     <Checkbox
+                        checked={selectedEmployees.includes(employee.id)}
+                        onCheckedChange={(checked) => handleSelectEmployee(employee.id, !!checked)}
+                        aria-label={`Select ${employee.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell>{employee.designation}</TableCell>
                   <TableCell>
