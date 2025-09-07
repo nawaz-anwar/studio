@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Users, FileText, Menu, CalendarCheck, FilePieChart, ReceiptText, ListTodo } from 'lucide-react';
-
+import { LayoutDashboard, Users, Menu, CalendarCheck, FilePieChart, ReceiptText, ListTodo, Shield, LogOut } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -25,6 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NavLink from './_components/nav-link';
+import UserMenu from './_components/user-menu';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -81,38 +81,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <span>Reports</span>
                 </NavLink>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+              <NavLink href="/admins">
+                <Shield />
+                <span>Admins</span>
+              </NavLink>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-auto w-full justify-start gap-3 p-2">
-                <Avatar className="size-8">
-                  <AvatarImage src="https://picsum.photos/100" alt="Admin" data-ai-hint="person avatar" />
-                  <AvatarFallback>A</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium text-sidebar-foreground">Admin</span>
-                  <span className="text-xs text-sidebar-foreground/70">admin@creteflow.com</span>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Admin</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    admin@creteflow.com
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Log out</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <UserMenu />
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
@@ -156,6 +134,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <NavLink href="/reports" isMobile>
                     <FilePieChart className="h-5 w-5" />
                     Reports
+                </NavLink>
+                 <NavLink href="/admins" isMobile>
+                    <Shield className="h-5 w-5" />
+                    Admins
                 </NavLink>
               </nav>
             </SheetContent>

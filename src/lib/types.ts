@@ -26,3 +26,9 @@ export type Task = {
     priority: 'Low' | 'Medium' | 'High';
     dueDate: string;
 }
+
+export type Admin = {
+  id: string;
+  email: string;
+  createdAt: string;
+};
