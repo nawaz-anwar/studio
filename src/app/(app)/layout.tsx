@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Users, FileText, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Menu, CalendarCheck } from 'lucide-react';
 
 import {
   SidebarProvider,
@@ -32,13 +32,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2">
-            <Image src="https://picsum.photos/40/40" alt="CreteFlow Logo" width={40} height={40} className="rounded-full" data-ai-hint="logo" />
+            <Image src="/logo.png" alt="Master Crete Logo" width={40} height={40} className="rounded-full" data-ai-hint="logo" />
             <div className="flex flex-col">
               <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
-                CreteFlow
+                Master Crete
               </span>
               <span className="text-xs text-sidebar-foreground/70">
-                Master Crete LLC
+                Master Crete Building Contracting LLC
               </span>
             </div>
           </div>
@@ -56,6 +56,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Users />
                 <span>Employees</span>
               </NavLink>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <NavLink href="/attendance">
+                    <CalendarCheck />
+                    <span>Attendance</span>
+                </NavLink>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <NavLink href="/payroll">
@@ -112,8 +118,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   href="#"
                   className="group flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground"
                 >
-                  <Image src="https://picsum.photos/40/40" alt="CreteFlow Logo" width={32} height={32} className="rounded-full" data-ai-hint="logo" />
-                  <span className="sr-only">CreteFlow</span>
+                  <Image src="/logo.png" alt="Master Crete Logo" width={32} height={32} className="rounded-full" data-ai-hint="logo" />
+                  <span className="sr-only">Master Crete</span>
                 </Link>
                 <NavLink href="/dashboard" isMobile>
                     <LayoutDashboard className="h-5 w-5" />
@@ -122,6 +128,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <NavLink href="/employees" isMobile>
                     <Users className="h-5 w-5" />
                     Employees
+                </NavLink>
+                <NavLink href="/attendance" isMobile>
+                    <CalendarCheck className="h-5 w-5" />
+                    Attendance
                 </NavLink>
                 <NavLink href="/payroll" isMobile>
                     <FileText className="h-5 w-5" />
