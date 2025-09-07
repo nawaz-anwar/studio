@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -45,12 +45,17 @@ export default function LoginForm() {
     // Hardcoded check for the initial admin user
     if (values.email === 'nzan576@gmail.com' && values.password === 'abcd@4321#') {
         try {
-            // Attempt to sign in. If it fails because the user doesn't exist, that's okay for this special case.
-            // We will redirect anyway. This is a temporary measure for first-time login.
+            // Attempt to sign in. If it fails, create the user.
             await signInWithEmailAndPassword(auth, values.email, values.password);
-        } catch (error) {
-            // Ignore auth errors for this specific hardcoded user, as they may not exist yet.
-            console.log("Proceeding with hardcoded login bypass.");
+        } catch (error: any) {
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                try {
+                    // Create the user if they don't exist
+                    await createUserWithEmailAndPassword(auth, values.email, values.password);
+                } catch (creationError) {
+                     console.error("Failed to create hardcoded admin:", creationError);
+                }
+            }
         } finally {
             toast({
                 title: 'Login Successful',
@@ -58,8 +63,8 @@ export default function LoginForm() {
             });
             router.push('/dashboard');
             setIsSubmitting(false);
-            return;
         }
+        return; // Important to stop execution here
     }
 
 
