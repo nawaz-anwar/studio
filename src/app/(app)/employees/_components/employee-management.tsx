@@ -162,7 +162,7 @@ export default function EmployeeManagement() {
                             name="salary"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Salary (Monthly)</FormLabel>
+                                <FormLabel>Salary (Monthly, AED)</FormLabel>
                                 <FormControl>
                                 <Input type="number" placeholder="15000" {...field} />
                                 </FormControl>
@@ -216,7 +216,7 @@ export default function EmployeeManagement() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Designation</TableHead>
-                <TableHead>Salary</TableHead>
+                <TableHead>Salary (AED)</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Today's Attendance</TableHead>
                 <TableHead>
@@ -229,7 +229,7 @@ export default function EmployeeManagement() {
                 <TableRow key={employee.id}>
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell>{employee.designation}</TableCell>
-                  <TableCell>${employee.salary.toLocaleString()}</TableCell>
+                  <TableCell>AED {employee.salary.toLocaleString()}</TableCell>
                   <TableCell>{employee.city}, {employee.country}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">

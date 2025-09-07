@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import DashboardClient from "./_components/dashboard-client";
 
@@ -17,7 +16,7 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">AED {totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+20.1% from last month</p>
           </CardContent>
         </Card>
@@ -27,7 +26,7 @@ export default function DashboardPage() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalExpenses.toLocaleString()}</div>
+            <div className="text-2xl font-bold">AED {totalExpenses.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+12.2% from last month</p>
           </CardContent>
         </Card>
@@ -37,7 +36,7 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${profit.toLocaleString()}</div>
+            <div className="text-2xl font-bold">AED {profit.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+25.3% from last month</p>
           </CardContent>
         </Card>
