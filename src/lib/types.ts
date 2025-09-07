@@ -5,6 +5,7 @@ export type Employee = {
   salary: number;
   city: string;
   country: string;
+  mobile?: string;
   attendance?: Record<string, 'present' | 'absent' | 'leave'>;
   overtimeHours?: Record<string, number>; // month-year as key
 };

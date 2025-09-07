@@ -51,6 +51,8 @@ import type { Employee } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 const employeeSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -58,18 +60,32 @@ const employeeSchema = z.object({
   salary: z.coerce.number().positive('Salary must be a positive number.'),
   city: z.string().min(2, 'City is required.'),
   country: z.string().min(2, 'Country is required.'),
+  mobile: z.string().optional(),
 });
 
-const initialEmployees: Employee[] = [
-    { id: 'EMP001', name: 'John Doe', designation: 'Project Manager', salary: 15000, city: 'Dubai', country: 'UAE' },
-    { id: 'EMP002', name: 'Jane Smith', designation: 'Civil Engineer', salary: 12000, city: 'Abu Dhabi', country: 'UAE' },
-    { id: 'EMP003', name: 'Sam Wilson', designation: 'Foreman', salary: 8000, city: 'Sharjah', country: 'UAE' },
-];
-
 export default function EmployeeManagement() {
-  const [employees, setEmployees] = React.useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const { toast } = useToast();
+  
+  React.useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "employees"));
+        const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+        setEmployees(employeesData);
+      } catch (error) {
+        console.error("Error fetching employees: ", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch employees from the database.",
+        });
+      }
+    };
+
+    fetchEmployees();
+  }, [toast]);
   
   const form = useForm<z.infer<typeof employeeSchema>>({
     resolver: zodResolver(employeeSchema),
@@ -79,21 +95,29 @@ export default function EmployeeManagement() {
       salary: 0,
       city: '',
       country: '',
+      mobile: '',
     },
   });
 
-  function onSubmit(values: z.infer<typeof employeeSchema>) {
-    const newEmployee: Employee = {
-      id: `EMP${String(employees.length + 1).padStart(3, '0')}`,
-      ...values,
-    };
-    setEmployees([...employees, newEmployee]);
-    toast({
-      title: 'Success!',
-      description: 'New employee has been added.',
-    });
-    form.reset();
-    setIsDialogOpen(false);
+  async function onSubmit(values: z.infer<typeof employeeSchema>) {
+    try {
+      const docRef = await addDoc(collection(db, "employees"), values);
+      const newEmployee: Employee = { id: docRef.id, ...values };
+      setEmployees([...employees, newEmployee]);
+      toast({
+        title: 'Success!',
+        description: 'New employee has been added.',
+      });
+      form.reset();
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error adding employee: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not save the employee to the database.",
+      });
+    }
   }
 
   const handleAttendanceChange = (employeeId: string, isPresent: boolean) => {
@@ -152,6 +176,19 @@ export default function EmployeeManagement() {
                                 <FormLabel>Designation</FormLabel>
                                 <FormControl>
                                 <Input placeholder="Project Manager" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="mobile"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Mobile Number (Optional)</FormLabel>
+                                <FormControl>
+                                <Input placeholder="0501234567" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -216,6 +253,7 @@ export default function EmployeeManagement() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Designation</TableHead>
+                <TableHead>Mobile</TableHead>
                 <TableHead>Salary (AED)</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Today's Attendance</TableHead>
@@ -229,6 +267,7 @@ export default function EmployeeManagement() {
                 <TableRow key={employee.id}>
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell>{employee.designation}</TableCell>
+                  <TableCell>{employee.mobile || 'N/A'}</TableCell>
                   <TableCell>AED {employee.salary.toLocaleString()}</TableCell>
                   <TableCell>{employee.city}, {employee.country}</TableCell>
                   <TableCell>
