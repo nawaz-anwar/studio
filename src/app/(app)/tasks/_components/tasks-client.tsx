@@ -136,7 +136,13 @@ export default function TasksClient() {
     } else {
       setSelectedTask(null);
       setIsEditing(false);
-      form.reset();
+      form.reset({
+        title: '',
+        description: '',
+        priority: 'Medium',
+        status: 'To Do',
+        dueDate: new Date(),
+      });
     }
     setIsFormDialogOpen(true);
   };
@@ -206,9 +212,9 @@ export default function TasksClient() {
 
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8">
-       <div className="flex items-start justify-between">
+       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Task Board</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Task Board</h1>
                 <p className="text-muted-foreground">Manage your team's tasks and projects.</p>
             </div>
             <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
@@ -229,7 +235,7 @@ export default function TasksClient() {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <FormField control={form.control} name="title" render={({ field }) => (<FormItem><FormLabel>Title</FormLabel><FormControl><Input placeholder="e.g., Finalize project proposal" {...field} /></FormControl><FormMessage /></FormItem>)} />
                             <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description (Optional)</FormLabel><FormControl><Textarea placeholder="Add more details about the task..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <FormField control={form.control} name="priority" render={({ field }) => (<FormItem><FormLabel>Priority</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Low">Low</SelectItem><SelectItem value="Medium">Medium</SelectItem><SelectItem value="High">High</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
                                 <FormField control={form.control} name="status" render={({ field }) => (<FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl><SelectContent><SelectItem value="To Do">To Do</SelectItem><SelectItem value="In Progress">In Progress</SelectItem><SelectItem value="Done">Done</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
                             </div>
@@ -247,7 +253,7 @@ export default function TasksClient() {
         </div>
       
       <Tabs defaultValue="To Do" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="w-full grid grid-cols-1 sm:w-auto sm:inline-flex sm:grid-cols-3">
           <TabsTrigger value="To Do">To Do ({tasksByStatus('To Do').length})</TabsTrigger>
           <TabsTrigger value="In Progress">In Progress ({tasksByStatus('In Progress').length})</TabsTrigger>
           <TabsTrigger value="Done">Done ({tasksByStatus('Done').length})</TabsTrigger>
@@ -259,7 +265,7 @@ export default function TasksClient() {
                 <CardHeader>
                     <CardTitle>{status}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -276,10 +282,10 @@ export default function TasksClient() {
                                 <TableRow key={task.id}>
                                     <TableCell>
                                         <div className="font-medium">{task.title}</div>
-                                        <div className="text-sm text-muted-foreground">{task.description}</div>
+                                        <div className="text-sm text-muted-foreground break-words">{task.description}</div>
                                     </TableCell>
                                     <TableCell><Badge variant={getPriorityBadgeVariant(task.priority)}>{task.priority}</Badge></TableCell>
-                                    <TableCell>{format(new Date(task.dueDate), 'PPP')}</TableCell>
+                                    <TableCell className="whitespace-nowrap">{format(new Date(task.dueDate), 'PPP')}</TableCell>
                                     <TableCell>
                                         <Select onValueChange={(value) => handleStatusChange(task.id, value as Task['status'])} value={task.status}>
                                             <SelectTrigger className="w-[150px]">

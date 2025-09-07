@@ -146,7 +146,7 @@ export default function AttendanceClient() {
     <div className="grid auto-rows-max items-start gap-4 md:gap-8">
       <Card>
         <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <CardTitle>Daily Attendance</CardTitle>
                     <CardDescription>Mark employee attendance for the selected date. You can select multiple employees to mark attendance in bulk.</CardDescription>
@@ -156,7 +156,7 @@ export default function AttendanceClient() {
                     <Button
                         variant={"outline"}
                         className={cn(
-                        "w-[240px] justify-start text-left font-normal",
+                        "w-full sm:w-[240px] justify-start text-left font-normal",
                         !selectedDate && "text-muted-foreground"
                         )}
                     >
@@ -178,14 +178,14 @@ export default function AttendanceClient() {
                 </Popover>
             </div>
             {selectedEmployees.length > 0 && (
-                <div className="flex items-center gap-2 pt-4">
+                <div className="flex items-center gap-2 pt-4 flex-wrap">
                     <span className="text-sm text-muted-foreground">{selectedEmployees.length} employee(s) selected</span>
                     <Button size="sm" onClick={() => handleBulkUpdate('present')} disabled={isUpdating}>Mark as Present</Button>
                     <Button size="sm" variant="secondary" onClick={() => handleBulkUpdate('absent')} disabled={isUpdating}>Mark as Absent</Button>
                 </div>
             )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -211,8 +211,8 @@ export default function AttendanceClient() {
                         aria-label={`Select ${employee.name}`}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{employee.name}</TableCell>
-                  <TableCell>{employee.designation}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{employee.name}</TableCell>
+                  <TableCell className="whitespace-nowrap">{employee.designation}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                         <Switch 

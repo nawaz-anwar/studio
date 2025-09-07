@@ -82,7 +82,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Salary (This Month)</CardTitle>
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <DashboardClient chartData={monthlyData} />
         </div>

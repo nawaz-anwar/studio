@@ -268,7 +268,7 @@ export default function EmployeeManagement() {
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
       <Card>
         <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <CardTitle>Employee Records</CardTitle>
                     <CardDescription>Manage your company's employee data.</CardDescription>
@@ -353,7 +353,7 @@ export default function EmployeeManagement() {
                         <TabsContent value="manual" className="pt-4">
                                 <Form {...manualForm}>
                                 <form onSubmit={manualForm.handleSubmit(handleManualSubmit)} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <FormField control={manualForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem>)} />
                                     <FormField control={manualForm.control} name="designation" render={({ field }) => (<FormItem><FormLabel>Designation</FormLabel><FormControl><Input placeholder="Project Manager" {...field} /></FormControl><FormMessage /></FormItem>)} />
                                     <FormField control={manualForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" placeholder="15000" {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -378,7 +378,7 @@ export default function EmployeeManagement() {
                 </Dialog>
             </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -395,11 +395,11 @@ export default function EmployeeManagement() {
             <TableBody>
               {employees.map((employee) => (
                 <TableRow key={employee.id}>
-                  <TableCell className="font-medium">{employee.name}</TableCell>
-                  <TableCell>{employee.designation}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{employee.name}</TableCell>
+                  <TableCell className="whitespace-nowrap">{employee.designation}</TableCell>
                   <TableCell>{employee.mobile || 'N/A'}</TableCell>
                   <TableCell>AED {employee.salary.toLocaleString()}</TableCell>
-                  <TableCell>{employee.city ? `${employee.city}, ` : ''}{employee.country}</TableCell>
+                  <TableCell className="whitespace-nowrap">{employee.city ? `${employee.city}, ` : ''}{employee.country}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -454,7 +454,7 @@ export default function EmployeeManagement() {
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4 pt-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={editForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={editForm.control} name="designation" render={({ field }) => (<FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={editForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />

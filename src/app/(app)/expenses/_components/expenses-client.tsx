@@ -314,7 +314,7 @@ export default function ExpensesClient() {
             </CardHeader>
             <CardContent>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onExpenseSubmit)} className="grid grid-cols-1 md:grid-cols-5 items-end gap-4">
+                    <form onSubmit={form.handleSubmit(onExpenseSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 items-end gap-4">
                         <FormField
                             control={form.control}
                             name="date"
@@ -356,10 +356,10 @@ export default function ExpensesClient() {
                                 </FormItem>
                             )}
                         />
-                        <FormField control={form.control} name="name" render={({ field }) => ( <FormItem className="flex-grow"><FormLabel>Expense Name</FormLabel><FormControl><Input placeholder="e.g., Cement, Car Fuel" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="name" render={({ field }) => ( <FormItem className="flex-grow md:col-span-2 lg:col-span-1"><FormLabel>Expense Name</FormLabel><FormControl><Input placeholder="e.g., Cement, Car Fuel" {...field} /></FormControl><FormMessage /></FormItem>)} />
                          <FormField control={form.control} name="quantity" render={({ field }) => (<FormItem><FormLabel>Quantity</FormLabel><FormControl><Input type="number" placeholder="50" {...field} /></FormControl><FormMessage /></FormItem>)} />
                         <FormField control={form.control} name="cost" render={({ field }) => ( <FormItem><FormLabel>Cost (AED)</FormLabel><FormControl><Input type="number" placeholder="250" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <Button type="submit" size="icon" className="h-10 w-10">
+                        <Button type="submit" size="icon" className="h-10 w-10 justify-self-end">
                             <PlusCircle className="h-5 w-5" />
                             <span className="sr-only">Add Expense</span>
                         </Button>
@@ -411,7 +411,7 @@ export default function ExpensesClient() {
                                 <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-[240px] justify-start text-left font-normal",
+                                    "w-full sm:w-[240px] justify-start text-left font-normal",
                                     !filterDate && "text-muted-foreground"
                                 )}
                                 >
@@ -437,7 +437,7 @@ export default function ExpensesClient() {
                 </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -452,7 +452,7 @@ export default function ExpensesClient() {
                 {filteredExpenses.length > 0 ? (
                     filteredExpenses.map((expense) => (
                         <TableRow key={expense.id}>
-                        <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
+                        <TableCell className="whitespace-nowrap">{new Date(expense.date).toLocaleDateString()}</TableCell>
                         <TableCell className="font-medium">{expense.name}</TableCell>
                         <TableCell>{expense.quantity ?? 'N/A'}</TableCell>
                         <TableCell>AED {expense.cost.toLocaleString()}</TableCell>
