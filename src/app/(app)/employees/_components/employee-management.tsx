@@ -52,7 +52,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, writeBatch, doc } from 'firebase/firestore';
 import { extractEmployeeInfo } from '@/lib/actions';
 import { Textarea } from '@/components/ui/textarea';
 import { employeeSchema, extractionSchema } from '@/lib/schema/employee';
@@ -119,6 +119,7 @@ export default function EmployeeManagement() {
         if (result.success && result.data?.employees) {
             const batch = writeBatch(db);
             const newEmployees: Employee[] = [];
+            const employeesCollection = collection(db, "employees");
 
             for (const extracted of result.data.employees) {
                 const newEmployeeData = {
@@ -131,7 +132,7 @@ export default function EmployeeManagement() {
                 };
 
                 const validatedData = employeeSchema.parse(newEmployeeData);
-                const docRef = addDoc(collection(db, "employees"), validatedData);
+                const docRef = doc(employeesCollection); // Create a new doc reference
                 batch.set(docRef, validatedData);
                 newEmployees.push({ id: docRef.id, ...validatedData });
             }
