@@ -75,6 +75,7 @@ export default function ReportsClient() {
   const selectedDate = startOfMonth(new Date(parseInt(year), parseInt(month)));
   const daysInMonth = getDaysInMonth(selectedDate);
   const monthKey = format(selectedDate, 'yyyy-MM');
+  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const calculateSalaryInfo = React.useCallback((employee: Employee) => {
     const totalPresent = Object.keys(employee.attendance || {}).filter(dateKey => {
@@ -221,8 +222,8 @@ export default function ReportsClient() {
                             <TableHead key={day} className="text-center">{day}</TableHead>
                             ))}
                             <TableHead className="text-center font-bold whitespace-nowrap">Total Present</TableHead>
-                            <TableHead className="text-center font-bold whitespace-nowrap">Base Salary (AED)</TableHead>
                             <TableHead className="text-center font-bold whitespace-nowrap">Overtime Pay (AED)</TableHead>
+                            <TableHead className="text-center font-bold whitespace-nowrap">Total Monthly Salary (AED)</TableHead>
                             <TableHead className="text-center font-bold sticky right-0 z-10 bg-card whitespace-nowrap">Total Salary (AED)</TableHead>
                         </TableRow>
                         </TableHeader>
@@ -243,10 +244,10 @@ export default function ReportsClient() {
                                     })}
                                     <TableCell className="text-center font-bold">{totalPresent}</TableCell>
                                     <TableCell className="text-center font-bold">
-                                        {baseCalculatedSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        {overtimePay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </TableCell>
                                     <TableCell className="text-center font-bold">
-                                        {overtimePay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        {baseCalculatedSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </TableCell>
                                     <TableCell className="text-center font-bold sticky right-0 z-10 bg-card">
                                         {totalSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -323,5 +324,3 @@ export default function ReportsClient() {
     </div>
   );
 }
-
-    
