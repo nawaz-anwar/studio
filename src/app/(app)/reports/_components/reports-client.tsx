@@ -98,7 +98,7 @@ export default function ReportsClient() {
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     const monthName = months.find(m => m.value === month)?.label;
-    link.setAttribute("download", `Attendance_Report_${monthName}_${year}.csv`);
+    link.setAttribute("download", `Attendance_Salary_Report_${monthName}_${year}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -106,7 +106,7 @@ export default function ReportsClient() {
     
     toast({
         title: "CSV Exported",
-        description: "The attendance report has been downloaded successfully.",
+        description: "The attendance and salary report has been downloaded successfully.",
       });
   };
   
@@ -123,8 +123,8 @@ export default function ReportsClient() {
         <CardHeader className="pb-3">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <CardTitle>Monthly Attendance Report</CardTitle>
-                    <CardDescription>View and export monthly attendance records for all employees.</CardDescription>
+                    <CardTitle>Monthly Attendance & Salary Report</CardTitle>
+                    <CardDescription>View and export monthly attendance and salary records for all employees.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                     <Select value={month} onValueChange={setMonth}>

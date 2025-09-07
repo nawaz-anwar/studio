@@ -70,12 +70,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </NavLink>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <NavLink href="/payroll">
-                <FileText />
-                <span>Payroll</span>
-              </NavLink>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
                 <NavLink href="/reports">
                     <FilePieChart />
                     <span>Reports</span>
@@ -148,10 +142,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                  <NavLink href="/expenses" isMobile>
                     <ReceiptText className="h-5 w-5" />
                     Expenses
-                </NavLink>
-                <NavLink href="/payroll" isMobile>
-                    <FileText className="h-5 w-5" />
-                    Payroll
                 </NavLink>
                 <NavLink href="/reports" isMobile>
                     <FilePieChart className="h-5 w-5" />
