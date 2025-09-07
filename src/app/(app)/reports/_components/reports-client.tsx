@@ -152,7 +152,7 @@ export default function ReportsClient() {
             </div>
         </CardHeader>
         <CardContent>
-          <div className="w-full overflow-x-auto">
+          <div className="relative w-full overflow-x-auto">
             <Table className="min-w-full">
                 <TableHeader>
                 <TableRow>
