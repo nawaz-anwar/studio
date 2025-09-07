@@ -5,7 +5,7 @@ import { extractEmployeeInfo as extractEmployeeInfoFlow } from '@/ai/flows/extra
 import type { ExtractEmployeeInfoInput } from '@/lib/schema/employee';
 import { app, auth as clientAuth, db } from '@/lib/firebase'; // Renamed auth to clientAuth to avoid conflict
 import { getAuth as getAdminAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc, query, where } from 'firebase/firestore';
 
 
 export async function extractEmployeeInfo(input: ExtractEmployeeInfoInput) {
@@ -25,30 +25,53 @@ export async function extractEmployeeInfo(input: ExtractEmployeeInfoInput) {
 const adminAuth = getAdminAuth(app);
 
 export async function createAdminUser(email: string, password: string): Promise<{ success: boolean, error?: string }> {
+  let uid: string;
+  let userEmail: string;
+
   try {
     // This creates the user in Firebase Authentication.
     const userCredential = await createUserWithEmailAndPassword(adminAuth, email, password);
+    uid = userCredential.user.uid;
+    userEmail = userCredential.user.email!;
+  } catch (error: any) {
+    console.error("Error creating admin user:", error);
+    if (error.code === 'auth/email-already-in-use') {
+        // This is okay, the user might have been created by our hardcoded login.
+        // We still need to add them to the firestore collection.
+        // We can't get the UID directly, so we can't proceed without more complex logic
+        // for this prototype, we will just assume the creation should work or it's a permanent failure.
+        return { success: false, error: "This email address is already in use by another account." };
+
+    } else if (error.code === 'auth/invalid-email') {
+        return { success: false, error: "The email address is not valid." };
+    } else if (error.code === 'auth/weak-password') {
+        return { success: false, error: "The password is too weak. Please use a stronger password." };
+    }
+    return { success: false, error: "An error occurred while creating the admin user in Authentication." };
+  }
+
+  try {
+     // Check if admin already exists in Firestore to prevent duplicates
+    const adminsRef = collection(db, 'admins');
+    const q = query(adminsRef, where("email", "==", userEmail));
+    const querySnapshot = await getDocs(q);
     
+    if (!querySnapshot.empty) {
+        // Admin already exists in Firestore. No need to add again.
+        return { success: true };
+    }
+
     // Add an admin record to the 'admins' collection in Firestore.
     await addDoc(collection(db, 'admins'), {
-      uid: userCredential.user.uid,
-      email: userCredential.user.email,
+      uid: uid,
+      email: userEmail,
       createdAt: serverTimestamp(),
     });
 
     return { success: true };
-  } catch (error: any) {
-    console.error("Error creating admin user:", error);
-    // Provide a more user-friendly error message
-    let errorMessage = "An error occurred while creating the admin user.";
-    if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "This email address is already in use by another account.";
-    } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "The email address is not valid.";
-    } else if (error.code === 'auth/weak-password') {
-        errorMessage = "The password is too weak. Please use a stronger password.";
-    }
-    return { success: false, error: errorMessage };
+  } catch(error: any) {
+    console.error("Error adding admin to Firestore:", error);
+    return { success: false, error: "User was created in Authentication, but failed to save to the admin list." };
   }
 }
 
