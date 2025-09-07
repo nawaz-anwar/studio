@@ -41,6 +41,28 @@ export default function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsSubmitting(true);
+    
+    // Hardcoded check for the initial admin user
+    if (values.email === 'nzan576@gmail.com' && values.password === 'abcd@4321#') {
+        try {
+            // Attempt to sign in. If it fails because the user doesn't exist, that's okay for this special case.
+            // We will redirect anyway. This is a temporary measure for first-time login.
+            await signInWithEmailAndPassword(auth, values.email, values.password);
+        } catch (error) {
+            // Ignore auth errors for this specific hardcoded user, as they may not exist yet.
+            console.log("Proceeding with hardcoded login bypass.");
+        } finally {
+            toast({
+                title: 'Login Successful',
+                description: 'Welcome! Please create a permanent admin account.',
+            });
+            router.push('/dashboard');
+            setIsSubmitting(false);
+            return;
+        }
+    }
+
+
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({
