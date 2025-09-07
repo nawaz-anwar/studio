@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import {
   Table,
@@ -141,7 +142,7 @@ export default function ExpensesClient() {
   async function onExpenseSubmit(values: z.infer<typeof expenseSchema>) {
     setIsProcessing(true);
     try {
-        const newExpenseData: Omit<Expense, 'id'> = {
+        const newExpenseData: Omit<Expense, 'id' | 'quantity'> & { quantity?: number } = {
             name: values.name,
             cost: values.cost,
             date: format(values.date, 'yyyy-MM-dd'),
@@ -153,7 +154,7 @@ export default function ExpensesClient() {
 
         const docRef = await addDoc(collection(db, "expenses"), newExpenseData);
         
-        setExpenses(prev => [{ id: docRef.id, ...newExpenseData }, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        setExpenses(prev => [{ id: docRef.id, ...newExpenseData, quantity: newExpenseData.quantity }, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
         
         toast({
             title: "Success!",
@@ -176,7 +177,7 @@ export default function ExpensesClient() {
     if (!selectedExpense) return;
     setIsProcessing(true);
     try {
-        const updatedData: Omit<Expense, 'id'> = {
+        const updatedData: Omit<Expense, 'id' | 'quantity'> & { quantity?: number } = {
             name: values.name,
             cost: values.cost,
             date: format(values.date, 'yyyy-MM-dd'),
@@ -189,7 +190,7 @@ export default function ExpensesClient() {
         const docRef = doc(db, "expenses", selectedExpense.id);
         await updateDoc(docRef, updatedData);
 
-        setExpenses(prev => prev.map(exp => exp.id === selectedExpense.id ? { id: selectedExpense.id, ...updatedData } : exp).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        setExpenses(prev => prev.map(exp => exp.id === selectedExpense.id ? { id: selectedExpense.id, ...updatedData, quantity: updatedData.quantity } : exp).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
         toast({
             title: 'Success!',
             description: 'Expense has been updated.',
@@ -279,6 +280,11 @@ export default function ExpensesClient() {
         });
     }
   }, [expenses, filterType, filterDate, filterMonth, filterYear]);
+  
+  const totalCost = React.useMemo(() => {
+    return filteredExpenses.reduce((acc, expense) => acc + expense.cost, 0);
+  }, [filteredExpenses]);
+
 
   const onExportClick = () => {
     let filename = "expenses.csv";
@@ -490,6 +496,11 @@ export default function ExpensesClient() {
               </TableBody>
             </Table>
           </CardContent>
+          <CardFooter className="justify-end">
+            <div className="text-lg font-semibold">
+              Total: AED {totalCost.toLocaleString()}
+            </div>
+          </CardFooter>
         </Card>
 
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -559,5 +570,3 @@ export default function ExpensesClient() {
     </div>
   );
 }
-
-    
