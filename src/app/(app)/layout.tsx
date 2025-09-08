@@ -1,4 +1,5 @@
 
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Users, Menu, CalendarCheck, FilePieChart, ReceiptText, ListTodo, Shield } from 'lucide-react';
@@ -14,7 +15,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import NavLink from './_components/nav-link';
 import UserMenu from './_components/user-menu';
 
@@ -95,6 +96,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="sm:max-w-xs flex flex-col p-0">
+                <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
                 <SidebarHeader>
                     <div className="flex items-center gap-2">
                         <Image src="/logo.png" alt="Master Crete Logo" width={40} height={40} className="rounded-full" data-ai-hint="logo" />
