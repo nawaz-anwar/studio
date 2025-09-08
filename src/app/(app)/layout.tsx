@@ -25,7 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2">
-            <Image src="https://storage.googleapis.com/aai-web-samples/logo-1721927159752.png" alt="Master Crete Logo" width={40} height={40} className="rounded-full" data-ai-hint="logo" />
+            <Image src="https://storage.googleapis.com/aai-web-samples/logo-1722271285375.png" alt="Master Crete Logo" width={40} height={40} data-ai-hint="logo" />
             <div className="flex flex-col">
               <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
                 Master Crete
@@ -99,7 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
                 <SidebarHeader>
                     <div className="flex items-center gap-2">
-                        <Image src="https://storage.googleapis.com/aai-web-samples/logo-1721927159752.png" alt="Master Crete Logo" width={40} height={40} className="rounded-full" data-ai-hint="logo" />
+                        <Image src="https://storage.googleapis.com/aai-web-samples/logo-1722271285375.png" alt="Master Crete Logo" width={40} height={40} data-ai-hint="logo" />
                         <div className="flex flex-col">
                         <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
                             Master Crete
