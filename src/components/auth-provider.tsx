@@ -4,7 +4,7 @@ import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Skeleton } from './ui/skeleton';
+import { Loader2 } from 'lucide-react';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (isLoading || (!user && pathname !== '/login') || (user && pathname === '/login')) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
-        <Skeleton className="h-16 w-16 rounded-full" />
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
   }
