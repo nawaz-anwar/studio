@@ -85,7 +85,7 @@ CreteFlow is a comprehensive, modern, and secure Enterprise Resource Planning (E
 
 5.  **Initial Login**:
     Use the following hardcoded credentials for the first-time login:
-    - **Email**: `nzan576@gmail.com`
-    - **Password**: `abcd@4321#`
+    - **Email**: ``
+    - **Password**: ``
 
     After logging in, it is highly recommended to go to the **Admins** page and create a new, permanent administrator account for yourself.
