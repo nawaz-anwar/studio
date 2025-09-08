@@ -1,6 +1,7 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Users, Menu, CalendarCheck, FilePieChart, ReceiptText, ListTodo, Shield, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Menu, CalendarCheck, FilePieChart, ReceiptText, ListTodo, Shield } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -93,44 +94,69 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-xs">
-              <nav className="grid gap-6 text-lg font-medium">
-                <Link
-                  href="#"
-                  className="group flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground"
-                >
-                  <Image src="/logo.png" alt="Master Crete Logo" width={32} height={32} className="rounded-full" data-ai-hint="logo" />
-                  <span className="sr-only">Master Crete</span>
-                </Link>
-                <NavLink href="/dashboard" isMobile>
-                    <LayoutDashboard className="h-5 w-5" />
-                    Dashboard
-                </NavLink>
-                <NavLink href="/employees" isMobile>
-                    <Users className="h-5 w-5" />
-                    Employees
-                </NavLink>
-                <NavLink href="/attendance" isMobile>
-                    <CalendarCheck className="h-5 w-5" />
-                    Attendance
-                </NavLink>
-                 <NavLink href="/expenses" isMobile>
-                    <ReceiptText className="h-5 w-5" />
-                    Expenses
-                </NavLink>
-                 <NavLink href="/tasks" isMobile>
-                    <ListTodo className="h-5 w-5" />
-                    Tasks
-                </NavLink>
-                <NavLink href="/reports" isMobile>
-                    <FilePieChart className="h-5 w-5" />
-                    Reports
-                </NavLink>
-                 <NavLink href="/admins" isMobile>
-                    <Shield className="h-5 w-5" />
-                    Admins
-                </NavLink>
-              </nav>
+            <SheetContent side="left" className="sm:max-w-xs flex flex-col p-0">
+                <SidebarHeader>
+                    <div className="flex items-center gap-2">
+                        <Image src="/logo.png" alt="Master Crete Logo" width={40} height={40} className="rounded-full" data-ai-hint="logo" />
+                        <div className="flex flex-col">
+                        <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
+                            Master Crete
+                        </span>
+                        <span className="text-xs text-sidebar-foreground/70">
+                            Master Crete Building Contracting LLC
+                        </span>
+                        </div>
+                    </div>
+                </SidebarHeader>
+                <SidebarContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <NavLink href="/dashboard" isMobile>
+                                <LayoutDashboard className="h-5 w-5" />
+                                Dashboard
+                            </NavLink>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <NavLink href="/employees" isMobile>
+                                <Users className="h-5 w-5" />
+                                Employees
+                            </NavLink>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <NavLink href="/attendance" isMobile>
+                                <CalendarCheck className="h-5 w-5" />
+                                Attendance
+                            </NavLink>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <NavLink href="/expenses" isMobile>
+                                <ReceiptText className="h-5 w-5" />
+                                Expenses
+                            </NavLink>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <NavLink href="/tasks" isMobile>
+                                <ListTodo className="h-5 w-5" />
+                                Tasks
+                            </NavLink>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <NavLink href="/reports" isMobile>
+                                <FilePieChart className="h-5 w-5" />
+                                Reports
+                            </NavLink>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <NavLink href="/admins" isMobile>
+                                <Shield className="h-5 w-5" />
+                                Admins
+                            </NavLink>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarContent>
+                 <SidebarFooter>
+                    <UserMenu />
+                </SidebarFooter>
             </SheetContent>
           </Sheet>
           <div className="relative ml-auto flex-1 md:grow-0">
