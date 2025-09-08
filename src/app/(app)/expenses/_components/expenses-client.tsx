@@ -76,6 +76,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { useLoading } from '@/components/loading-provider';
 
 const expenseSchema = z.object({
   name: z.string().min(2, 'Expense name is required.'),
@@ -93,10 +94,12 @@ export default function ExpensesClient() {
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [selectedExpense, setSelectedExpense] = React.useState<Expense | null>(null);
+  const { setIsLoading } = useLoading();
 
   const { toast } = useToast();
   
   const fetchExpenses = React.useCallback(async () => {
+    setIsLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, "expenses"));
       const expensesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -108,8 +111,10 @@ export default function ExpensesClient() {
         title: "Error",
         description: "Could not fetch expenses from the database.",
       });
+    } finally {
+        setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, setIsLoading]);
 
   React.useEffect(() => {
     fetchExpenses();
@@ -141,6 +146,7 @@ export default function ExpensesClient() {
 
   async function onExpenseSubmit(values: z.infer<typeof expenseSchema>) {
     setIsProcessing(true);
+    setIsLoading(true);
     try {
         const newExpenseData: Omit<Expense, 'id' | 'quantity'> & { quantity?: number } = {
             name: values.name,
@@ -170,12 +176,14 @@ export default function ExpensesClient() {
         });
     } finally {
         setIsProcessing(false);
+        setIsLoading(false);
     }
   }
 
   async function onEditSubmit(values: z.infer<typeof expenseSchema>) {
     if (!selectedExpense) return;
     setIsProcessing(true);
+    setIsLoading(true);
     try {
         const updatedData: Omit<Expense, 'id' | 'quantity'> & { quantity?: number } = {
             name: values.name,
@@ -206,10 +214,12 @@ export default function ExpensesClient() {
         });
     } finally {
         setIsProcessing(false);
+        setIsLoading(false);
     }
   }
 
   async function onDeleteExpense(expenseId: string) {
+    setIsLoading(true);
     try {
         await deleteDoc(doc(db, "expenses", expenseId));
         setExpenses(prev => prev.filter(exp => exp.id !== expenseId));
@@ -224,6 +234,8 @@ export default function ExpensesClient() {
             title: "Error",
             description: "Could not delete the expense.",
         });
+    } finally {
+        setIsLoading(false);
     }
   }
   
@@ -358,9 +370,9 @@ export default function ExpensesClient() {
                         />
                         <FormField control={form.control} name="name" render={({ field }) => ( <FormItem className="flex-grow md:col-span-2 lg:col-span-1"><FormLabel>Expense Name</FormLabel><FormControl><Input placeholder="e.g., Cement, Car Fuel" {...field} /></FormControl><FormMessage /></FormItem>)} />
                          <FormField control={form.control} name="quantity" render={({ field }) => (<FormItem><FormLabel>Quantity</FormLabel><FormControl><Input type="number" placeholder="50" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="cost" render={({ field }) => ( <FormItem><FormLabel>Cost (AED)</FormLabel><FormControl><Input type="number" placeholder="250" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <Button type="submit" size="icon" className="h-10 w-10 justify-self-end">
-                            <PlusCircle className="h-5 w-5" />
+                        <FormField control={form.control} name="cost" render={({ field }) => ( <FormItem><FormLabel>Cost (AED)</FormLabel><FormControl><Input type="number" placeholder="250" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem>)} />
+                        <Button type="submit" size="icon" className="h-10 w-10 justify-self-end" disabled={isProcessing}>
+                            {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <PlusCircle className="h-5 w-5" />}
                             <span className="sr-only">Add Expense</span>
                         </Button>
                     </form>

@@ -29,6 +29,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useLoading } from '@/components/loading-provider';
 
 export default function AttendanceClient() {
   const [employees, setEmployees] = React.useState<Employee[]>([]);
@@ -36,8 +37,10 @@ export default function AttendanceClient() {
   const [selectedEmployees, setSelectedEmployees] = React.useState<string[]>([]);
   const [isUpdating, setIsUpdating] = React.useState(false);
   const { toast } = useToast();
+  const { setIsLoading } = useLoading();
   
   const fetchEmployees = React.useCallback(async () => {
+    setIsLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, "employees"));
       const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
@@ -49,14 +52,17 @@ export default function AttendanceClient() {
         title: "Error",
         description: "Could not fetch employees from the database.",
       });
+    } finally {
+        setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, setIsLoading]);
 
   React.useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
 
   const handleAttendanceChange = async (employeeId: string, isPresent: boolean) => {
+    setIsLoading(true);
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
     const employeeRef = doc(db, "employees", employeeId);
     
@@ -82,6 +88,8 @@ export default function AttendanceClient() {
         title: "Error",
         description: "Could not update attendance.",
       });
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -89,6 +97,7 @@ export default function AttendanceClient() {
     if (selectedEmployees.length === 0) return;
     
     setIsUpdating(true);
+    setIsLoading(true);
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
     const batch = writeBatch(db);
 
@@ -121,11 +130,12 @@ export default function AttendanceClient() {
         });
     } finally {
         setIsUpdating(false);
+        setIsLoading(false);
     }
   }
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
       setSelectedEmployees(employees.map(e => e.id));
     } else {
       setSelectedEmployees([]);
@@ -191,7 +201,13 @@ export default function AttendanceClient() {
               <TableRow>
                 <TableHead className="w-[50px]">
                    <Checkbox
-                        checked={selectedEmployees.length > 0 && selectedEmployees.length === employees.length}
+                        checked={
+                            selectedEmployees.length === employees.length
+                              ? true
+                              : selectedEmployees.length > 0
+                              ? 'indeterminate'
+                              : false
+                          }
                         onCheckedChange={handleSelectAll}
                         aria-label="Select all"
                     />

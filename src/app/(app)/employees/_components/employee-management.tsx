@@ -67,6 +67,7 @@ import { extractEmployeeInfo } from '@/lib/actions';
 import { Textarea } from '@/components/ui/textarea';
 import { employeeSchema, extractionSchema } from '@/lib/schema/employee';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useLoading } from '@/components/loading-provider';
 
 
 export default function EmployeeManagement() {
@@ -76,8 +77,10 @@ export default function EmployeeManagement() {
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const { toast } = useToast();
+  const { setIsLoading } = useLoading();
   
   const fetchEmployees = React.useCallback(async () => {
+    setIsLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, "employees"));
       const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
@@ -89,8 +92,10 @@ export default function EmployeeManagement() {
         title: "Error",
         description: "Could not fetch employees from the database.",
       });
+    } finally {
+        setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, setIsLoading]);
 
   React.useEffect(() => {
     fetchEmployees();
@@ -127,6 +132,7 @@ export default function EmployeeManagement() {
 
   async function handleExtraction(values: z.infer<typeof extractionSchema>) {
     setIsProcessing(true);
+    setIsLoading(true);
     try {
       const file = values.photo[0];
       const reader = new FileReader();
@@ -185,11 +191,13 @@ export default function EmployeeManagement() {
       });
     } finally {
         setIsProcessing(false);
+        setIsLoading(false);
     }
   }
 
   async function handleManualSubmit(values: z.infer<typeof employeeSchema>) {
     setIsProcessing(true);
+    setIsLoading(true);
     try {
         const validatedData = employeeSchema.parse(values);
         const docRef = await addDoc(collection(db, "employees"), validatedData);
@@ -211,12 +219,14 @@ export default function EmployeeManagement() {
         });
     } finally {
         setIsProcessing(false);
+        setIsLoading(false);
     }
   }
 
   async function handleEditSubmit(values: z.infer<typeof employeeSchema>) {
     if (!selectedEmployee) return;
     setIsProcessing(true);
+    setIsLoading(true);
     try {
         const validatedData = employeeSchema.parse(values);
         const docRef = doc(db, "employees", selectedEmployee.id);
@@ -238,10 +248,12 @@ export default function EmployeeManagement() {
         });
     } finally {
         setIsProcessing(false);
+        setIsLoading(false);
     }
   }
   
   async function handleDeleteEmployee(employeeId: string) {
+    setIsLoading(true);
     try {
         await deleteDoc(doc(db, "employees", employeeId));
         setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
@@ -256,6 +268,8 @@ export default function EmployeeManagement() {
             title: "Error",
             description: "Could not delete the employee from the database.",
         });
+    } finally {
+        setIsLoading(false);
     }
   }
   
@@ -356,7 +370,7 @@ export default function EmployeeManagement() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <FormField control={manualForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem>)} />
                                     <FormField control={manualForm.control} name="designation" render={({ field }) => (<FormItem><FormLabel>Designation</FormLabel><FormControl><Input placeholder="Project Manager" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                                    <FormField control={manualForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" placeholder="15000" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                    <FormField control={manualForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" placeholder="15000" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem>)} />
                                     <FormField control={manualForm.control} name="country" render={({ field }) => (<FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="UAE" {...field} /></FormControl><FormMessage /></FormItem>)} />
                                     <FormField control={manualForm.control} name="city" render={({ field }) => (<FormItem><FormLabel>City (Optional)</FormLabel><FormControl><Input placeholder="Dubai" {...field} /></FormControl><FormMessage /></FormItem>)} />
                                     <FormField control={manualForm.control} name="mobile" render={({ field }) => (<FormItem><FormLabel>Mobile (Optional)</FormLabel><FormControl><Input placeholder="+971..." {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -457,7 +471,7 @@ export default function EmployeeManagement() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={editForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={editForm.control} name="designation" render={({ field }) => (<FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={editForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={editForm.control} name="salary" render={({ field }) => (<FormItem><FormLabel>Salary (AED)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={editForm.control} name="country" render={({ field }) => (<FormItem><FormLabel>Country</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={editForm.control} name="city" render={({ field }) => (<FormItem><FormLabel>City (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={editForm.control} name="mobile" render={({ field }) => (<FormItem><FormLabel>Mobile (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />

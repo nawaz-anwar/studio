@@ -35,6 +35,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { format, getDaysInMonth, startOfMonth } from 'date-fns';
 import { useDebouncedCallback } from 'use-debounce';
+import { useLoading } from '@/components/loading-provider';
 
 export default function ReportsClient() {
   const [employees, setEmployees] = React.useState<Employee[]>([]);
@@ -42,9 +43,11 @@ export default function ReportsClient() {
   const [month, setMonth] = React.useState((new Date().getMonth()).toString()); // month is 0-indexed
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState<Record<string, boolean>>({});
+  const { setIsLoading } = useLoading();
 
 
   const fetchEmployees = React.useCallback(async () => {
+    setIsLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, "employees"));
       const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
@@ -56,8 +59,10 @@ export default function ReportsClient() {
         title: "Error",
         description: "Could not fetch employees from the database.",
       });
+    } finally {
+        setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, setIsLoading]);
 
   React.useEffect(() => {
     fetchEmployees();
@@ -102,7 +107,7 @@ export default function ReportsClient() {
     if (isNaN(hours) || hours < 0) return;
 
     setIsSaving(prev => ({...prev, [employeeId]: true}));
-
+    // No global loading for this debounced save
     const employeeRef = doc(db, "employees", employeeId);
     try {
         await updateDoc(employeeRef, {
@@ -130,7 +135,7 @@ export default function ReportsClient() {
     const rows = employees.map(employee => {
         const { totalPresent, baseCalculatedSalary, overtimePay, totalSalary } = calculateSalaryInfo(employee);
         return [
-            employee.name, 
+            `"${employee.name.replace(/"/g, '""')}"`, 
             totalPresent, 
             overtimePay.toFixed(2), 
             baseCalculatedSalary.toFixed(2), 
@@ -145,7 +150,7 @@ export default function ReportsClient() {
     const headers = ['Employee', 'Overtime Hours', 'Overtime Pay (AED)'];
     const rows = employees.map(employee => {
         const { overtimePay, employeeOvertimeHours } = calculateSalaryInfo(employee);
-        return [employee.name, employeeOvertimeHours, overtimePay.toFixed(2)].join(',');
+        return [`"${employee.name.replace(/"/g, '""')}"`, employeeOvertimeHours, overtimePay.toFixed(2)].join(',');
     });
     downloadCsv([headers.join(','), ...rows].join('\n'), `Overtime_Report_${months.find(m => m.value === month)?.label}_${year}.csv`);
   };

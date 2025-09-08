@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/components/auth-provider";
+import { LoadingProvider } from "@/components/loading-provider";
 
 export const metadata: Metadata = {
   title: "CreteFlow",
@@ -24,9 +25,11 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
-            {children}
-        </AuthProvider>
+        <LoadingProvider>
+          <AuthProvider>
+              {children}
+          </AuthProvider>
+        </LoadingProvider>
         <Toaster />
       </body>
     </html>

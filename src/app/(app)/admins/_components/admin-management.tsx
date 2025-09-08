@@ -64,6 +64,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { createAdminUser } from '@/lib/actions';
 import { format } from 'date-fns';
+import { useLoading } from '@/components/loading-provider';
 
 const adminSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -75,8 +76,10 @@ export default function AdminManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const { toast } = useToast();
+  const { setIsLoading } = useLoading();
 
   const fetchAdmins = React.useCallback(async () => {
+    setIsLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, 'admins'));
       const adminsData = querySnapshot.docs.map((doc) => {
@@ -95,8 +98,10 @@ export default function AdminManagement() {
         title: 'Error',
         description: 'Could not fetch admin users from the database.',
       });
+    } finally {
+        setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, setIsLoading]);
 
   React.useEffect(() => {
     fetchAdmins();
@@ -112,6 +117,7 @@ export default function AdminManagement() {
 
   async function handleAddAdmin(values: z.infer<typeof adminSchema>) {
     setIsProcessing(true);
+    setIsLoading(true);
     try {
       const result = await createAdminUser(values.email, values.password);
 
@@ -135,11 +141,12 @@ export default function AdminManagement() {
       });
     } finally {
       setIsProcessing(false);
+      setIsLoading(false);
     }
   }
 
   async function handleDeleteAdmin(adminId: string) {
-    // In a real app, this should be a protected server action that also deletes the Auth user.
+    setIsLoading(true);
     try {
         await deleteDoc(doc(db, "admins", adminId));
         setAdmins(prev => prev.filter(admin => admin.id !== adminId));
@@ -154,6 +161,8 @@ export default function AdminManagement() {
             title: "Error",
             description: "Could not delete the admin user.",
         });
+    } finally {
+        setIsLoading(false);
     }
   }
 
@@ -161,7 +170,7 @@ export default function AdminManagement() {
     <div className="grid auto-rows-max items-start gap-4 md:gap-8">
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <CardTitle>Admin Management</CardTitle>
               <CardDescription>
@@ -233,7 +242,7 @@ export default function AdminManagement() {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

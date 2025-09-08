@@ -77,6 +77,7 @@ import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from 'firebase
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLoading } from '@/components/loading-provider';
 
 
 const taskSchema = z.object({
@@ -94,8 +95,10 @@ export default function TasksClient() {
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const { toast } = useToast();
+  const { setIsLoading } = useLoading();
 
   const fetchTasks = React.useCallback(async () => {
+    setIsLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, 'tasks'));
       const tasksData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Task)).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
@@ -107,8 +110,10 @@ export default function TasksClient() {
         title: 'Error',
         description: 'Could not fetch tasks from the database.',
       });
+    } finally {
+        setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, setIsLoading]);
 
   React.useEffect(() => {
     fetchTasks();
@@ -148,6 +153,7 @@ export default function TasksClient() {
   };
   
   const handleStatusChange = async (taskId: string, status: Task['status']) => {
+    setIsLoading(true);
     try {
       const taskRef = doc(db, 'tasks', taskId);
       await updateDoc(taskRef, { status });
@@ -156,11 +162,14 @@ export default function TasksClient() {
     } catch (error) {
       console.error('Error updating status: ', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not update task status.' });
+    } finally {
+        setIsLoading(false);
     }
   };
 
   async function onSubmit(values: z.infer<typeof taskSchema>) {
     setIsProcessing(true);
+    setIsLoading(true);
     try {
       const taskData = {
         ...values,
@@ -185,10 +194,12 @@ export default function TasksClient() {
       toast({ variant: 'destructive', title: 'Error', description: 'Could not save the task.' });
     } finally {
       setIsProcessing(false);
+      setIsLoading(false);
     }
   }
 
   async function onDeleteTask(taskId: string) {
+    setIsLoading(true);
     try {
       await deleteDoc(doc(db, 'tasks', taskId));
       setTasks(prev => prev.filter(t => t.id !== taskId));
@@ -196,6 +207,8 @@ export default function TasksClient() {
     } catch (error) {
       console.error('Error deleting task: ', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not delete the task.' });
+    } finally {
+        setIsLoading(false);
     }
   }
 
