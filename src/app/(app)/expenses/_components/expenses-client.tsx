@@ -105,7 +105,6 @@ export default function ExpensesClient() {
       const expensesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setExpenses(expensesData);
     } catch (error) {
-      console.error("Error fetching expenses: ", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -168,7 +167,6 @@ export default function ExpensesClient() {
         });
         form.reset();
     } catch (error) {
-        console.error("Error adding expense: ", error);
         toast({
             variant: "destructive",
             title: "Error",
@@ -206,7 +204,6 @@ export default function ExpensesClient() {
         setIsEditDialogOpen(false);
         setSelectedExpense(null);
     } catch (error) {
-        console.error("Error updating expense: ", error);
         toast({
             variant: "destructive",
             title: "Error",
@@ -228,7 +225,6 @@ export default function ExpensesClient() {
             description: 'Expense has been deleted.',
         });
     } catch (error) {
-        console.error("Error deleting expense: ", error);
         toast({
             variant: "destructive",
             title: "Error",

@@ -92,7 +92,6 @@ export default function AdminManagement() {
       });
       setAdmins(adminsData);
     } catch (error) {
-      console.error('Error fetching admins: ', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -133,7 +132,6 @@ export default function AdminManagement() {
         throw new Error(result.error || 'An unknown error occurred.');
       }
     } catch (error: any) {
-      console.error('Error creating admin:', error);
       toast({
         variant: 'destructive',
         title: 'Creation Failed',
@@ -155,7 +153,6 @@ export default function AdminManagement() {
             description: 'Admin user has been deleted from Firestore.',
         });
     } catch (error) {
-        console.error("Error deleting admin: ", error);
         toast({
             variant: "destructive",
             title: "Error",

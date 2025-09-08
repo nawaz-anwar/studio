@@ -30,7 +30,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
 import { signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
@@ -73,7 +72,6 @@ export default function UserMenu() {
       router.push('/login');
       toast({ description: "You have been logged out." });
     } catch (error) {
-      console.error("Error signing out:", error);
       toast({ variant: "destructive", title: "Logout Failed", description: "An error occurred while signing out." });
     }
   };
@@ -91,7 +89,6 @@ export default function UserMenu() {
         form.reset();
         setIsResetDialogOpen(false);
     } catch (error: any) {
-        console.error("Error resetting password:", error);
         toast({ variant: "destructive", title: "Error", description: error.code === 'auth/wrong-password' ? 'Incorrect current password.' : 'Failed to update password.' });
     } finally {
         setIsProcessing(false);
@@ -104,7 +101,6 @@ export default function UserMenu() {
   }
 
   const userEmail = user.email || "No email";
-  const userInitial = user.email ? user.email.charAt(0).toUpperCase() : 'A';
 
   return (
     <>

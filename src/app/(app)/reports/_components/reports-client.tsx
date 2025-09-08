@@ -53,7 +53,6 @@ export default function ReportsClient() {
       const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
       setEmployees(employeesData);
     } catch (error) {
-      console.error("Error fetching employees: ", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -122,7 +121,6 @@ export default function ReportsClient() {
             )
         );
     } catch (error) {
-        console.error("Error updating overtime:", error);
         toast({ variant: "destructive", title: "Error", description: "Failed to save overtime hours." });
     } finally {
         setIsSaving(prev => ({...prev, [employeeId]: false}));

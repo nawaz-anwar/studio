@@ -104,7 +104,6 @@ export default function TasksClient() {
       const tasksData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Task)).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
       setTasks(tasksData);
     } catch (error) {
-      console.error('Error fetching tasks: ', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -160,7 +159,6 @@ export default function TasksClient() {
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
       toast({ description: 'Task status updated.' });
     } catch (error) {
-      console.error('Error updating status: ', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not update task status.' });
     } finally {
         setIsLoading(false);
@@ -190,7 +188,6 @@ export default function TasksClient() {
       setIsFormDialogOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Error saving task: ', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not save the task.' });
     } finally {
       setIsProcessing(false);
@@ -205,7 +202,6 @@ export default function TasksClient() {
       setTasks(prev => prev.filter(t => t.id !== taskId));
       toast({ title: 'Success!', description: 'Task has been deleted.' });
     } catch (error) {
-      console.error('Error deleting task: ', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not delete the task.' });
     } finally {
         setIsLoading(false);

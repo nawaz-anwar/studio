@@ -53,7 +53,8 @@ export default function LoginForm() {
                     // Create the user if they don't exist
                     await createUserWithEmailAndPassword(auth, values.email, values.password);
                 } catch (creationError) {
-                     console.error("Failed to create hardcoded admin:", creationError);
+                     // Fails silently if creation also fails, e.g. weak password.
+                     // The generic error below will be shown.
                 }
             }
         } finally {
@@ -76,7 +77,6 @@ export default function LoginForm() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Login Error:", error);
       let description = "An unknown error occurred. Please try again.";
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         description = "Invalid email or password. Please try again.";

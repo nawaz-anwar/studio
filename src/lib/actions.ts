@@ -13,7 +13,6 @@ export async function extractEmployeeInfo(input: ExtractEmployeeInfoInput) {
         const result = await extractEmployeeInfoFlow(input);
         return { success: true, data: result };
     } catch (error) {
-        console.error(error);
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during AI extraction.';
         return { success: false, error: errorMessage };
     }
@@ -34,20 +33,17 @@ export async function createAdminUser(email: string, password: string): Promise<
     uid = userCredential.user.uid;
     userEmail = userCredential.user.email!;
   } catch (error: any) {
-    console.error("Error creating admin user:", error);
     if (error.code === 'auth/email-already-in-use') {
         // This is okay, the user might have been created by our hardcoded login.
-        // We still need to add them to the firestore collection.
-        // We can't get the UID directly, so we can't proceed without more complex logic
-        // for this prototype, we will just assume the creation should work or it's a permanent failure.
-        return { success: false, error: "This email address is already in use by another account." };
-
+        // We will proceed to add them to firestore if they don't exist there.
+        userEmail = email;
     } else if (error.code === 'auth/invalid-email') {
         return { success: false, error: "The email address is not valid." };
     } else if (error.code === 'auth/weak-password') {
         return { success: false, error: "The password is too weak. Please use a stronger password." };
+    } else {
+        return { success: false, error: "An error occurred while creating the admin user in Authentication." };
     }
-    return { success: false, error: "An error occurred while creating the admin user in Authentication." };
   }
 
   try {
@@ -60,17 +56,21 @@ export async function createAdminUser(email: string, password: string): Promise<
         // Admin already exists in Firestore. No need to add again.
         return { success: true };
     }
-
+    
+    // We need a UID. If the user was just created, we have it. 
+    // If they already existed, we don't have it from the client.
+    // For this prototype, we'll omit UID if it's an existing auth user.
+    // A robust solution would use a cloud function to get the UID by email.
+    
     // Add an admin record to the 'admins' collection in Firestore.
     await addDoc(collection(db, 'admins'), {
-      uid: uid,
+      // uid: uid, // This might be undefined if user already existed
       email: userEmail,
       createdAt: serverTimestamp(),
     });
 
     return { success: true };
   } catch(error: any) {
-    console.error("Error adding admin to Firestore:", error);
     return { success: false, error: "User was created in Authentication, but failed to save to the admin list." };
   }
 }
@@ -83,7 +83,6 @@ export async function deleteAdminUser(adminId: string): Promise<{ success: boole
         await deleteDoc(doc(db, "admins", adminId));
         return { success: true };
     } catch (error: any) {
-        console.error("Error deleting admin user:", error);
         return { success: false, error: error.message };
     }
 }

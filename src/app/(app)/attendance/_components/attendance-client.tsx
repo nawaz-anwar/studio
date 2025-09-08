@@ -46,7 +46,6 @@ export default function AttendanceClient() {
       const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
       setEmployees(employeesData);
     } catch (error) {
-      console.error("Error fetching employees: ", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -82,7 +81,6 @@ export default function AttendanceClient() {
       );
 
     } catch (error) {
-      console.error("Error updating attendance: ", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -122,7 +120,6 @@ export default function AttendanceClient() {
         });
         setSelectedEmployees([]);
     } catch (error) {
-        console.error("Error bulk updating attendance: ", error);
         toast({
             variant: "destructive",
             title: "Error",

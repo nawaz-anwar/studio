@@ -86,7 +86,6 @@ export default function EmployeeManagement() {
       const employeesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
       setEmployees(employeesData);
     } catch (error) {
-      console.error("Error fetching employees: ", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -183,7 +182,6 @@ export default function EmployeeManagement() {
       reader.readAsDataURL(file);
 
     } catch (error: any) {
-      console.error("Error during extraction or saving: ", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -211,7 +209,6 @@ export default function EmployeeManagement() {
         manualForm.reset();
         setIsAddDialogOpen(false);
     } catch (error: any) {
-        console.error("Error saving employee: ", error);
         toast({
             variant: "destructive",
             title: "Error",
@@ -240,7 +237,6 @@ export default function EmployeeManagement() {
         setIsEditDialogOpen(false);
         setSelectedEmployee(null);
     } catch (error) {
-        console.error("Error updating employee: ", error);
         toast({
             variant: "destructive",
             title: "Error",
@@ -262,7 +258,6 @@ export default function EmployeeManagement() {
             description: 'Employee has been deleted.',
         });
     } catch (error) {
-        console.error("Error deleting employee: ", error);
         toast({
             variant: "destructive",
             title: "Error",
