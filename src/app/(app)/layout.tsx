@@ -45,14 +45,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader>
           <div className="flex items-center gap-2">
             <LogoComponent />
-            <div className="flex flex-col">
-              <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
-                Master Crete
-              </span>
-              <span className="text-xs text-sidebar-foreground/70">
-                Master Crete Building Contracting LLC
-              </span>
-            </div>
+            {!logoError && (
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
+                  Master Crete
+                </span>
+                <span className="text-xs text-sidebar-foreground/70">
+                  Master Crete Building Contracting LLC
+                </span>
+              </div>
+            )}
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -119,14 +121,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SidebarHeader>
                     <div className="flex items-center gap-2">
                         <LogoComponent />
-                        <div className="flex flex-col">
-                        <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
-                            Master Crete
-                        </span>
-                        <span className="text-xs text-sidebar-foreground/70">
-                            Master Crete Building Contracting LLC
-                        </span>
-                        </div>
+                         {!logoError && (
+                          <div className="flex flex-col">
+                            <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
+                                Master Crete
+                            </span>
+                            <span className="text-xs text-sidebar-foreground/70">
+                                Master Crete Building Contracting LLC
+                            </span>
+                          </div>
+                        )}
                     </div>
                 </SidebarHeader>
                 <SidebarContent>
