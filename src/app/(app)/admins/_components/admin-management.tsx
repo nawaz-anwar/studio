@@ -167,7 +167,7 @@ export default function AdminManagement() {
   }
 
   return (
-    <div className="grid auto-rows-max items-start gap-4 md:gap-8">
+    <div className="grid auto-rows-max items-start gap-4 md:gap-6">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
