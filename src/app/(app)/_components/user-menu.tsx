@@ -111,10 +111,6 @@ export default function UserMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-auto w-full justify-start gap-3 p-2">
-            <Avatar className="size-8">
-              <AvatarImage src={`https://i.pravatar.cc/100?u=${user.uid}`} alt={userEmail} data-ai-hint="person avatar" />
-              <AvatarFallback>{userInitial}</AvatarFallback>
-            </Avatar>
             <div className="flex flex-col items-start">
               <span className="text-sm font-medium text-sidebar-foreground truncate">{userEmail}</span>
               <span className="text-xs text-sidebar-foreground/70">Administrator</span>
