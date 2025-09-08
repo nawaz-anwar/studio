@@ -6,7 +6,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="flex flex-col items-center text-center">
-            <Image src="/logo.png" alt="Master Crete Logo" width={80} height={80} className="rounded-full mb-4" data-ai-hint="logo" />
+            <Image src="https://storage.googleapis.com/aai-web-samples/logo-1721927159752.png" alt="Master Crete Logo" width={80} height={80} className="rounded-full mb-4" data-ai-hint="logo" />
             <h1 className="text-3xl font-bold tracking-tight">CreteFlow Admin</h1>
             <p className="text-muted-foreground">Sign in to manage your ERP.</p>
         </div>
