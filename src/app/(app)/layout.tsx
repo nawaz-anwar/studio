@@ -1,6 +1,7 @@
 
+'use client';
 
-import Link from 'next/link';
+import * as React from 'react';
 import Image from 'next/image';
 import { LayoutDashboard, Users, Menu, CalendarCheck, FilePieChart, ReceiptText, ListTodo, Shield } from 'lucide-react';
 import {
@@ -20,12 +21,30 @@ import NavLink from './_components/nav-link';
 import UserMenu from './_components/user-menu';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const [logoError, setLogoError] = React.useState(false);
+
+  const LogoComponent = () => (
+    logoError ? (
+        <span className="text-xs font-semibold text-sidebar-foreground/80">Master Crete Building Contracting LLC</span>
+    ) : (
+        <Image 
+            src="https://storage.googleapis.com/aai-web-samples/logo-1722271285375.png" 
+            alt="Master Crete Logo" 
+            width={40} 
+            height={40} 
+            data-ai-hint="logo"
+            onError={() => setLogoError(true)} 
+        />
+    )
+  );
+
+
   return (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2">
-            <Image src="https://storage.googleapis.com/aai-web-samples/logo-1722271285375.png" alt="Master Crete Logo" width={40} height={40} data-ai-hint="logo" />
+            <LogoComponent />
             <div className="flex flex-col">
               <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
                 Master Crete
@@ -99,7 +118,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
                 <SidebarHeader>
                     <div className="flex items-center gap-2">
-                        <Image src="https://storage.googleapis.com/aai-web-samples/logo-1722271285375.png" alt="Master Crete Logo" width={40} height={40} data-ai-hint="logo" />
+                        <LogoComponent />
                         <div className="flex flex-col">
                         <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
                             Master Crete
